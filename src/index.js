@@ -1,17 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { WagmiConfig, createConfig } from 'wagmi';
+import { arbitrumSepolia } from 'viem/chains';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const wagmiConfig = createConfig({
+  chains: [arbitrumSepolia],
+  ssr: false
+});
+
+const queryClient = new QueryClient();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  <QueryClientProvider client={queryClient}>
+    <WagmiConfig config={wagmiConfig}>
     <App />
-  </React.StrictMode>
+    </WagmiConfig>
+  </QueryClientProvider>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

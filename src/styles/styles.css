@@ -1,0 +1,1210 @@
+/* Variables CSS pour la cohérence */
+:root {
+  --primary-color: #89be83;
+  --primary-dark: #6fa869;
+  --secondary-color: #383e5c;
+  --text-muted: #666;
+  --danger-color: #dc3545;
+  --success-color: #28a745;
+  --warning-color: #856404;
+  --bg-light: #fcf9f8;
+  --bg-white: #ffffff;
+  --border-color: #e0e0e0;
+  --shadow-light: 0 4px 15px rgba(0,0,0,0.05);
+  --shadow-medium: 0 2px 8px rgba(0,0,0,0.1);
+  --border-radius: 8px;
+  --border-radius-lg: 15px;
+  --border-radius-xl: 25px;
+}
+
+/* Reset et base */
+* {
+  box-sizing: border-box;
+}
+
+/* ===== BOUTONS ===== */
+.btn {
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+.btn-small {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.btn-large {
+  padding: 18px 36px;
+  font-size: 1.2rem;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Boutons de pourcentage */
+.btn-percentage {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+.btn-percentage:last-child {
+  margin-right: 0;
+}
+
+.btn-percentage.active {
+  background-color: var(--primary-color);
+}
+
+/* Bouton MAX */
+.btn-max {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 60px;
+}
+
+/* ===== CARTES ===== */
+.card {
+  background-color: var(--bg-light);
+  border-radius: var(--border-radius-lg);
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-light);
+  border: 1px solid rgba(255,255,255,0.8);
+}
+
+.card-white {
+  background-color: var(--bg-white);
+  box-shadow: var(--shadow-medium);
+}
+
+/* ===== STATISTIQUES ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background-color: var(--bg-light);
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: var(--shadow-light);
+  border: 1px solid rgba(255,255,255,0.8);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.stat-icon img {
+  width: 50px;
+  height: 50px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--secondary-color);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+/* Grille utilisateur */
+.user-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+/* ===== FORMULAIRES ===== */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #555;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  background-color: var(--bg-white);
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.input-container .form-input {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+/* ===== TITRES ===== */
+.title {
+  color: var(--secondary-color);
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.title-primary {
+  color: var(--primary-color);
+}
+
+.title-danger {
+  color: var(--danger-color);
+}
+
+.title-success {
+  color: var(--success-color);
+}
+
+.title-large {
+  font-size: 1.8rem;
+}
+
+.title-small {
+  font-size: 1.2rem;
+}
+
+/* ===== TEXTE ===== */
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-primary {
+  color: var(--primary-color);
+}
+
+.text-danger {
+  color: var(--danger-color);
+}
+
+.text-success {
+  color: var(--success-color);
+}
+
+/* ===== LAYOUT ===== */
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.gap-10 {
+  gap: 10px;
+}
+
+.gap-20 {
+  gap: 20px;
+}
+
+/* ===== ESPACEMENT ===== */
+.mb-0 { margin-bottom: 0; }
+.mb-10 { margin-bottom: 10px; }
+.mb-15 { margin-bottom: 15px; }
+.mb-20 { margin-bottom: 20px; }
+.mb-25 { margin-bottom: 25px; }
+.mb-30 { margin-bottom: 30px; }
+
+.mt-10 { margin-top: 10px; }
+.mt-15 { margin-top: 15px; }
+.mt-20 { margin-top: 20px; }
+
+/* ===== ALERTES ===== */
+.alert {
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  margin: 15px 0;
+  font-weight: 600;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: var(--warning-color);
+  border: 1px solid #ffeaa7;
+}
+
+/* ===== TOOLTIPS ===== */
+.tooltip-icon {
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 16px;
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+  position: relative;
+  top: 1px;
+}
+
+/* ===== BADGES ===== */
+.badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.badge-warning {
+  background-color: #fff3cd;
+  color: var(--warning-color);
+}
+
+.badge-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.badge-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+/* ===== GRILLES ===== */
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+/* Historique des transactions */
+.transaction-history {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.transaction-history table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.transaction-history thead {
+  position: sticky;
+  top: 0;
+  background: #f3efec;
+  z-index: 10;
+}
+
+.transaction-history th,
+.transaction-history td {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.transaction-history tbody tr:nth-child(even) {
+  background: #f3efec;
+}
+
+.transaction-history tbody tr:hover {
+  background: rgba(137, 190, 131, 0.1);
+}
+
+/* ===== CARBON CALCULATOR ===== */
+
+/* Carte highlight */
+.stat-card-highlight {
+  background: linear-gradient(135deg, #88bd82, #6fa869) !important;
+  color: white !important;
+}
+
+.stat-card-highlight .stat-label,
+.stat-card-highlight .stat-value {
+  color: white !important;
+}
+
+.btn-white {
+  background: white !important;
+  color: #388e3c !important;
+  border: none;
+  padding: 12px 20px;
+  border-radius: var(--border-radius);
+  font-weight: 700;
+  font-size: 1rem;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.btn-white:hover {
+  background: #f8f9fa !important;
+}
+
+/* Introduction du calculateur */
+.calculator-intro {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.calculator-intro p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+/* Container principal du calculateur */
+.calculator-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+  min-height: 500px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Sidebar du calculateur */
+.calculator-sidebar {
+  background: #f8f9fa;
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Indicateur de progression */
+.progress-indicator {
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Navigation des étapes */
+.step-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.step-nav-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scroll-indicator {
+  display: none;
+  text-align: center;
+  padding: 8px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.scroll-hint {
+  opacity: 0.7;
+}
+
+.step-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: white;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  position: relative;
+  font-size: 1.1rem;
+}
+
+.step-nav-item:hover {
+  background: #f0f0f0;
+}
+
+.step-nav-item.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.step-nav-item.completed {
+  background: #e8f5e8;
+  color: var(--success-color);
+}
+
+.step-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
+}
+
+.step-title {
+  font-weight: 600;
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.step-check {
+  color: var(--success-color);
+  font-weight: bold;
+}
+
+/* Actions de la sidebar */
+.sidebar-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.action-buttons .btn {
+  flex: 1;
+}
+
+/* Contenu principal du calculateur */
+.calculator-main {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 30px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contenu des étapes */
+.step-content {
+  max-width: 600px;
+}
+
+.step-content .step-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--secondary-color);
+  margin-bottom: 10px;
+}
+
+.step-description {
+  color: var(--text-muted);
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+/* Grilles d'inputs */
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-group label {
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+.input-group small {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+/* Options de régime alimentaire */
+.diet-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.diet-option {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.diet-option input[type="radio"] {
+  display: none;
+}
+
+.diet-label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.diet-option input[type="radio"]:checked + .diet-label {
+  border-color: var(--primary-color);
+  background: rgba(137, 190, 131, 0.1);
+}
+
+.diet-icon {
+  font-size: 24px;
+  width: 30px;
+  text-align: center;
+}
+
+.diet-label div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diet-label strong {
+  font-size: 16px;
+  color: var(--secondary-color);
+}
+
+.diet-label small {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Grilles de style de vie et logement */
+.lifestyle-grid,
+.housing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.lifestyle-group,
+.housing-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lifestyle-group label,
+.housing-group label {
+  font-weight: 600;
+  color: var(--secondary-color);
+}
+
+/* Prompt de calcul */
+.calculate-prompt {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.calculate-prompt p {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin-bottom: 30px;
+}
+
+/* Résultats */
+.results-container {
+  max-width: 800px;
+}
+
+.results-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.result-card {
+  background: white;
+  padding: 25px;
+  border-radius: var(--border-radius);
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-left: 4px solid;
+}
+
+.result-card.daily {
+  border-left-color: #dc3545;
+}
+
+.result-card.annual {
+  border-left-color: #ff6b6b;
+}
+
+.result-card h4 {
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.result-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--secondary-color);
+}
+
+/* Graphique de répartition */
+.breakdown-chart {
+  background: white;
+  padding: 25px;
+  border-radius: var(--border-radius);
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.breakdown-chart h4 {
+  color: var(--secondary-color);
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.breakdown-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.breakdown-bar {
+  display: grid;
+  grid-template-columns: 120px 1fr 80px;
+  align-items: center;
+  gap: 15px;
+}
+
+.bar-label {
+  font-weight: 600;
+  color: var(--secondary-color);
+  text-transform: capitalize;
+}
+
+.bar-container {
+  height: 20px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.bar-value {
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* Comparaison ORNE */
+.orne-comparison {
+  background: white;
+  padding: 25px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.orne-comparison h4 {
+  color: var(--success-color);
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.comparison-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.offset-info p {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.offset-info .positive {
+  color: var(--success-color);
+}
+
+.offset-info .negative {
+  color: var(--danger-color);
+}
+
+.offset-details {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+}
+
+.offset-details ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.offset-details li {
+  margin-bottom: 5px;
+}
+
+/* Historique des calculs */
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.history-item {
+  background: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.history-date {
+  font-weight: 600;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.history-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-result {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.history-offset {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--success-color);
+}
+
+.history-offset .percentage {
+  font-weight: 600;
+}
+
+/* Grille des fonctionnalités */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.feature-item {
+  background: white;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.feature-item h4 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.feature-item p {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .headerContent {
+    flex-wrap: wrap;
+  }
+  .nav {
+    display: none !important;
+  }
+  .nav.mobile-open {
+    display: flex !important;
+    flex-direction: column;
+    position: absolute;
+    top: 65px;
+    left: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    z-index: 2000;
+    padding: 20px 0 10px 0;
+    gap: 0;
+  }
+  .nav.mobile-open .navItem {
+    padding: 18px 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #f3efec;
+    text-align: center;
+  }
+  .burger {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    margin-left: 10px;
+    z-index: 2100;
+  }
+  .burger span {
+    display: block;
+    width: 28px;
+    height: 4px;
+    background: var(--primary-color);
+    margin: 4px 0;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+}
+
+@media (max-width: 700px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .stat-card {
+    padding: 14px !important;
+  }
+  .dashboard-period-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .dashboard-period-row .PeriodSelector {
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .action-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .two-column-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Carbon Calculator Mobile */
+  .calculator-container {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    overflow: hidden !important;
+  }
+  
+  .calculator-sidebar {
+    order: 1 !important;
+    padding: 15px !important;
+    overflow: hidden !important;
+  }
+  
+  .calculator-main {
+    order: 2 !important;
+    padding: 20px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Navigation mobile avec scroll horizontal */
+  .step-nav {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  
+  .step-nav-container {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 10px !important;
+    padding-bottom: 10px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  .scroll-indicator {
+    display: block !important;
+  }
+  
+  .step-nav-container::-webkit-scrollbar {
+    display: none !important;
+  }
+  
+  .step-nav-item {
+    min-width: 120px !important;
+    flex-shrink: 0 !important;
+    padding: 10px 12px !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap !important;
+  }
+  
+  .step-nav-item.active {
+    min-width: 140px !important;
+    transform: scale(1.05) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+  }
+  
+  .step-icon {
+    font-size: 18px !important;
+    width: 20px !important;
+  }
+  
+  .step-title {
+    font-size: 0.85rem !important;
+  }
+  
+  /* Boutons de navigation mobile */
+  .sidebar-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: #f8f9fa !important;
+    margin: 20px 0 0 0 !important;
+    padding: 15px !important;
+    border-top: 1px solid #e9ecef !important;
+    z-index: 10 !important;
+    border-radius: 0 0 var(--border-radius) var(--border-radius) !important;
+  }
+  
+  .action-buttons {
+    gap: 8px !important;
+  }
+  
+  .action-buttons .btn {
+    padding: 12px 16px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  /* Contenu des étapes mobile */
+  .step-content {
+    max-width: none !important;
+    padding-bottom: 20px !important;
+  }
+  
+  .step-content .step-title {
+    font-size: 1.5rem !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .step-description {
+    font-size: 14px !important;
+    margin-bottom: 20px !important;
+  }
+  
+  /* Grilles d'inputs mobile */
+  .input-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  .diet-options {
+    gap: 10px !important;
+  }
+  
+  .diet-label {
+    padding: 12px !important;
+  }
+  
+  .lifestyle-grid,
+  .housing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  /* Résultats mobile */
+  .results-summary {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  .result-card {
+    padding: 20px !important;
+  }
+  
+  .breakdown-bars {
+    gap: 12px !important;
+  }
+  
+  .history-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* RainbowKit Connect Button */
+[data-testid="rk-connect-button"] {
+  background: var(--primary-color) !important;
+  color: #fff !important;
+  border-radius: var(--border-radius-xl) !important;
+  font-weight: 600 !important;
+  border: none !important;
+  transition: background 0.2s !important;
+}
+[data-testid="rk-connect-button"]:hover {
+  background: var(--primary-dark) !important;
+} 

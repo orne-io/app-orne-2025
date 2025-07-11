@@ -3,6 +3,7 @@ import Dashboard from './components/Dashboard';
 import Staking from './components/Staking';
 import Carbon from './components/Carbon';
 import AdminPanel from './components/AdminPanel';
+import Swap from './components/Swap';
 import { styles } from './styles/styles';
 import { useAdmin } from './hooks/useAdmin';
 import { useStatus } from './hooks/useStatus';
@@ -213,6 +214,10 @@ function ORNEStakingDApp() {
       );
     }
     
+    if (activeTab === 'swap') {
+      return <Swap />;
+    }
+    
     return (
       <Staking
         wallet={wallet}
@@ -299,6 +304,16 @@ function ORNEStakingDApp() {
                         >
                           Carbon
                         </div>
+                        <div
+                          style={{
+                            ...styles.navItem,
+                            ...(activeTab === 'swap' ? styles.navItemActive : {})
+                          }}
+                          className="navItem"
+                          onClick={() => { setActiveTab('swap'); setShowMobileMenu(false); }}
+                        >
+                          Swap
+                        </div>
                         {showAdminPanel && (
                           <div
                             style={{
@@ -355,6 +370,16 @@ function ORNEStakingDApp() {
                       onClick={() => { setActiveTab('carbon'); setShowMobileMenu(false); }}
                     >
                       Carbon
+                    </div>
+                    <div
+                      style={{
+                        ...styles.navItem,
+                        ...(activeTab === 'swap' ? styles.navItemActive : {})
+                      }}
+                      className="navItem"
+                      onClick={() => { setActiveTab('swap'); setShowMobileMenu(false); }}
+                    >
+                      Swap
                     </div>
                     {showAdminPanel && (
                       <div

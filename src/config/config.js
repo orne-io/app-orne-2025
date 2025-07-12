@@ -1,47 +1,52 @@
 // Configuration des contrats
 export const CONFIG = {
-  ORNE_TOKEN_ADDRESS: "0xaf3acac72af103Dc0adeD53F1CC08638f856Bf8F",
-  STAKING_VAULT_ADDRESS: "0x62A8347f59491F38d13EEe04c2C481bBAa0Ae326", // V5 Contract
-  NETWORK_ID: 421614,
-  NETWORK_NAME: "Arbitrum Sepolia"
+  ORNE_TOKEN_ADDRESS: "0x89DbdB8e3b0e41aAe0871Bf9e1fcCe72F117bB1f",
+  STAKING_VAULT_ADDRESS: "0x100156F27A3686a4da7fEE7148520A229320e7c8", // Mainnet
+  NETWORK_ID: 42161,
+  NETWORK_NAME: "Arbitrum One"
 };
 
 // Signatures des fonctions pour le contrat V5
 export const FUNCTION_SIGNATURES = {
-  // Token functions
-  'balanceOf(address)': '0x70a08231',
-  'allowance(address,address)': '0xdd62ed3e',
-  'approve(address,uint256)': '0x095ea7b3',
-  
-  // Staking functions V5
-  'stake(uint256)': '0xa694fc3a',
-  'requestUnstake(uint256)': '0x23095721',
-  'unstake()': '0x2def6620',
+  'accRewardsPerShare()': '0x7cbaccd5',
+  'canUnstake(address)': '0x85f4498b',
   'cancelUnstake()': '0x4ab17969',
   'claimRewards()': '0x372500ab',
-  
-  // View functions
-  'stakes(address)': '0x16934fc4',
-  'pendingRewards(address)': '0x31d7a262',
-  'getUnstakeInfo(address)': '0xf9bc81ee',
-  'canUnstake(address)': '0x85f4498b',
-  'timeUntilUnstake(address)': '0xf19d9b8c',
   'co2OffsetOf(address)': '0x939d4936',
   'co2PerOrne()': '0xa419aeeb',
-  'totalStaked()': '0x817b1cd2',
-  'pendingUnstakes(address)': '0x7db3aba7',
-  
-  // Nouvelles fonctions V5
-  'getTotalPendingUnstakes()': '0x8b83209b',
-  'getUniqueStakersCount()': '0x4f735a36',
-  'getUniqueHoldersCount()': '0x91b7f5ed',
-  'getTotalCO2Offset()': '0x5d1ca631',
-  'getGlobalStats()': '0x33ce93fe',
-  'updateTokenHolderStatus(address)': '0x2c1e816d',
-  
-  // Admin functions
   'depositRewards(uint256)': '0x8bdf67f2',
+  'emergencyWithdraw(address,uint256)': '0x95ccea67',
+  'getGlobalStats()': '0x6b4169c3',
+  'getTotalCO2Offset()': '0x6a05b4b9',
+  'getTotalPendingUnstakes()': '0x126d5df6',
+  'getUniqueHoldersCount()': '0x9f20d316',
+  'getUniqueStakersCount()': '0xcc526631',
+  'getUnstakeInfo(address)': '0xf9bc81ee',
+  'getUserInfo(address)': '0x6386c1c7',
+  'hasStaked(address)': '0xc93c8f34',
+  'hasTokens(address)': '0x3cefc1e0',
+  'orneToken()': '0x24e00349',
+  'owner()': '0x8da5cb5b',
+  'pendingRewards(address)': '0x31d7a262',
+  'pendingUnstakes(address)': '0xd6b6b23f',
+  'renounceOwnership()': '0x715018a6',
+  'requestUnstake(uint256)': '0x23095721',
+  'setUnstakingDelay(uint256)': '0x54c8dbcc',
+  'stake(uint256)': '0xa694fc3a',
+  'stakes(address)': '0x16934fc4',
+  'timeUntilUnstake(address)': '0xf19d9b8c',
+  'totalCO2Added()': '0xb92d52e3',
+  'totalPendingUnstakes()': '0x68bbf757',
+  'totalRewardsDeposited()': '0x1f4c74fd',
+  'totalStaked()': '0x817b1cd2',
+  'transferOwnership(address)': '0xf2fde38b',
+  'uniqueHolders()': '0xcaa9334f',
+  'uniqueStakers()': '0x7c356df8',
+  'unstake()': '0x2def6620',
+  'unstakeRequests(address)': '0xe0eb4d2e',
+  'unstakingDelay()': '0x07089246',
   'updateCO2(uint256)': '0x5c7c86ee',
-  'owner()': '0x8da5cb5b'
+  'updateTokenHolderStatus(address)': '0x1e489f41',
+  'balanceOf(address)': '0x70a08231',
 };
 

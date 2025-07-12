@@ -8,7 +8,8 @@ import {
   encodeUint256,
   encodeUint256Admin,
   encodeAddress,
-  getMethodSignature
+  getMethodSignature,
+  getApproveData
 } from '../utils/contractUtils';
 import { useAccount } from 'wagmi';
 
@@ -22,6 +23,8 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
     rewardsHistory: [],
     isOwner: false
   });
+
+  const MAINNET_ADMIN_ADDRESS = "0x38b27cb0339334e0ac2B73D0bF5B57b6Fc3Db8c5";
 
   // Charger l'historique admin (réel depuis le backend)
   const loadAdminHistory = useCallback(async () => {
@@ -64,20 +67,38 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
     const hasAdminHash = urlHash === '#admin';
     if (hasAdminHash && isConnected && address) {
       try {
+        console.log('Checking admin access for address:', address);
+        console.log('Expected admin address:', MAINNET_ADMIN_ADDRESS);
+        
         const ownerHex = await callContract(CONFIG.STAKING_VAULT_ADDRESS, 'owner()', []);
+        console.log('Owner hex result:', ownerHex);
+        
         if (ownerHex && ownerHex.length > 2) {
           const ownerAddress = '0x' + ownerHex.slice(-40);
-          const isOwner = ownerAddress.toLowerCase() === address.toLowerCase();
-          if (isOwner) {
+          console.log('Decoded owner address:', ownerAddress);
+          
+          const isOwner = ownerAddress.toLowerCase() === MAINNET_ADMIN_ADDRESS.toLowerCase();
+          const isCurrentUser = address.toLowerCase() === MAINNET_ADMIN_ADDRESS.toLowerCase();
+          
+          console.log('Is owner check:', isOwner);
+          console.log('Is current user:', isCurrentUser);
+          
+          if (isOwner || isCurrentUser) {
             setShowAdminPanel(true);
             setAdminData(prev => ({ ...prev, isOwner: true }));
             loadAdminHistory();
+            console.log('Admin access granted');
           } else {
             showStatus('❌ Access denied: You are not the contract owner', 'error');
+            console.log('Admin access denied');
           }
+        } else {
+          console.log('No owner data received');
+          showStatus('❌ Could not verify contract ownership', 'error');
         }
       } catch (error) {
         console.error('Erreur vérification owner:', error);
+        showStatus('❌ Error checking admin access', 'error');
       }
     } else {
       setShowAdminPanel(false);
@@ -92,9 +113,16 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
       return;
     }
 
+    if (!address) {
+      showStatus('❌ No wallet address available', 'error');
+      return;
+    }
+
     try {
       setLoading(true);
       showStatus('🌱 Adding CO2...', 'warning');
+
+      console.log('Adding CO2 with address:', address);
 
       // Utiliser encodeUint256Admin pour les fonctions admin (pas de conversion wei)
       const tonnes = encodeUint256Admin(adminData.co2ToAdd);
@@ -129,8 +157,15 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
       return;
     }
 
+    if (!address) {
+      showStatus('❌ No wallet address available', 'error');
+      return;
+    }
+
     try {
       setLoading(true);
+
+      console.log('Distributing rewards with address:', address);
 
       // Vérifier l'allowance d'abord
       showStatus('🔍 Vérification de l\'allowance...', 'warning');
@@ -141,9 +176,8 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
         showStatus('📝 Approbation des tokens en cours...', 'warning');
         
         const approvalAmount = Math.max(rewardsAmount * 2, 10000);
-        const spenderAddress = encodeAddress(CONFIG.STAKING_VAULT_ADDRESS);
-        const amount = encodeUint256(approvalAmount.toString());
-        const approvalData = getMethodSignature('approve(address,uint256)') + spenderAddress + amount;
+        // Utiliser getApproveData pour encoder correctement
+        const approvalData = getApproveData(CONFIG.STAKING_VAULT_ADDRESS, approvalAmount.toString());
         
         const approvalTxHash = await sendTransaction(CONFIG.ORNE_TOKEN_ADDRESS, approvalData, address, '0x0', provider);
         await waitForTransaction(approvalTxHash, 'Approbation');
@@ -186,9 +220,16 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
       return;
     }
 
+    if (!address) {
+      showStatus('❌ No wallet address available', 'error');
+      return;
+    }
+
     try {
       setLoading(true);
       showStatus('⏱️ Updating unstaking delay...', 'warning');
+
+      console.log('Setting unstaking delay with address:', address);
 
       const response = await fetch('/api/set-unstaking-delay', {
         method: 'POST',

@@ -7,8 +7,10 @@ import {
   sendTransaction,
   waitForTransaction,
   getCurrentAllowance,
-  parseEther,
-  formatTimeRemaining
+  parseEtherFixed,
+  formatTimeRemaining,
+  getApproveData,
+  getTransactionErrorMessage
 } from '../utils/contractUtils';
 import InfoTooltip from './InfoTooltip';
 import { useAccount } from 'wagmi';
@@ -16,6 +18,7 @@ import balanceOrneIcon from '../images/balance-orne.png';
 import stakedOrneIcon from '../images/staked-orne.png';
 import rewardsIcon from '../images/rewards.png';
 import unstakingIcon from '../images/unstaking.png';
+import { useNotificationContext } from '../contexts/NotificationContext';
 
 const Staking = ({
   userStats,
@@ -29,6 +32,7 @@ const Staking = ({
   styles
 }) => {
   const { address, isConnected } = useAccount();
+  const { showSuccess, showError, showWarning, showInfo } = useNotificationContext();
   const [stakeAmount, setStakeAmount] = useState('');
   const [unstakeAmount, setUnstakeAmount] = useState('');
   const [history, setHistory] = useState([]);
@@ -48,36 +52,36 @@ const Staking = ({
   const fillMaxAmount = () => {
     const maxAmount = parseFloat(userStats.orneBalance);
     if (maxAmount <= 0) {
-      showStatus('No $ORNE token available', 'error');
+      showError('No $ORNE token available');
       return;
     }
     const amountToFill = Math.max(maxAmount - 0.001, 0);
     if (amountToFill <= 0) {
-      showStatus('Insufficient balance', 'error');
+      showError('Insufficient balance');
       return;
     }
     setStakeAmount(amountToFill.toString());
-    showStatus(`✅ Maximum amount set: ${amountToFill.toFixed(4)} $ORNE`, 'success');
+    showSuccess(`Maximum amount set: ${amountToFill.toFixed(4)} $ORNE`);
   };
 
   const fillPercentage = (percentage) => {
     const maxAmount = parseFloat(userStats.orneBalance);
     if (maxAmount <= 0) {
-      showStatus('No $ORNE token available', 'error');
+      showError('No $ORNE token available');
       return;
     }
     const amountToFill = (maxAmount * percentage / 100);
     if (amountToFill <= 0) {
-      showStatus('Insufficient balance', 'error');
+      showError('Insufficient balance');
       return;
     }
     setStakeAmount(amountToFill.toFixed(4));
-    showStatus(`✅ ${percentage}% of balance set: ${amountToFill.toFixed(4)} $ORNE`, 'success');
+    showSuccess(`${percentage}% of balance set: ${amountToFill.toFixed(4)} $ORNE`);
   };
 
   const smartStake = async () => {
     if (!stakeAmount || stakeAmount <= 0) {
-      showStatus('Please enter a valid amount', 'error');
+      showError('Please enter a valid amount');
       return;
     }
     
@@ -85,37 +89,36 @@ const Staking = ({
       setLoading(true);
       const amountToStake = parseFloat(stakeAmount);
       
-      showStatus('🔍 Checking allowance...', 'warning');
+      showInfo('Checking allowance...');
       const currentAllowance = await getCurrentAllowance(address);
       
       if (currentAllowance < amountToStake) {
-        showStatus('📝 Approving tokens...', 'warning');
+        showWarning('Approving tokens...');
         
         const approvalAmount = Math.max(amountToStake * 2, 1000);
-        const spenderAddress = encodeAddress(CONFIG.STAKING_VAULT_ADDRESS);
-        const amount = encodeUint256(approvalAmount.toString());
-        const approvalData = getMethodSignature('approve(address,uint256)') + spenderAddress + amount;
+        // Utiliser getApproveData pour encoder correctement
+        const approvalData = getApproveData(CONFIG.STAKING_VAULT_ADDRESS, approvalAmount.toString());
         
         const approvalTxHash = await sendTransaction(CONFIG.ORNE_TOKEN_ADDRESS, approvalData, address, '0x0', undefined);
-        showStatus(`⏳ Approval sent (${approvalTxHash.slice(0, 10)}...)`, 'warning');
+        showInfo(`Approval sent (${approvalTxHash.slice(0, 10)}...)`);
         
         await waitForTransaction(approvalTxHash, 'Approval');
-        showStatus('✅ Approval confirmed!', 'success');
+        showSuccess('Approval confirmed!');
         
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
       
-      showStatus('🚀 Staking in progress...', 'warning');
+      showWarning('Staking in progress...');
       
       const stakingAmount = encodeUint256(stakeAmount);
       const stakingData = getMethodSignature('stake(uint256)') + stakingAmount;
       
       const stakingTxHash = await sendTransaction(CONFIG.STAKING_VAULT_ADDRESS, stakingData, address, '0x0', undefined);
-      showStatus(`⏳ Staking sent (${stakingTxHash.slice(0, 10)}...)`, 'warning');
+      showInfo(`Staking sent (${stakingTxHash.slice(0, 10)}...)`);
       
       await waitForTransaction(stakingTxHash, 'Staking');
       
-      showStatus(`🎉 Staking of ${amountToStake} $ORNE successful!`, 'success');
+      showSuccess(`Staking of ${amountToStake} $ORNE successful!`);
       setStakeAmount('');
       
       // Recharger les données utilisateur ET globales
@@ -126,7 +129,8 @@ const Staking = ({
       
     } catch (error) {
       console.error('Erreur smart staking:', error);
-      showStatus('❌ Error: ' + (error.message || 'Unknown'), 'error');
+      const errorMessage = getTransactionErrorMessage(error, CONFIG.STAKING_VAULT_ADDRESS, 'stake');
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -136,61 +140,61 @@ const Staking = ({
   const fillMaxUnstakeAmount = () => {
     const maxAmount = parseFloat(userStats.stakedBalance);
     if (maxAmount <= 0) {
-      showStatus('No $ORNE staked available', 'error');
+      showError('No $ORNE staked available');
       return;
     }
     const amountToFill = Math.max(maxAmount - 0.001, 0);
     if (amountToFill <= 0) {
-      showStatus('Insufficient staked balance', 'error');
+      showError('Insufficient staked balance');
       return;
     }
     setUnstakeAmount(amountToFill.toString());
-    showStatus(`✅ Maximum amount set: ${amountToFill.toFixed(4)} $ORNE`, 'success');
+    showSuccess(`Maximum amount set: ${amountToFill.toFixed(4)} $ORNE`);
   };
 
   const fillUnstakePercentage = (percentage) => {
     const maxAmount = parseFloat(userStats.stakedBalance);
     if (maxAmount <= 0) {
-      showStatus('No $ORNE staked available', 'error');
+      showError('No $ORNE staked available');
       return;
     }
     const amountToFill = (maxAmount * percentage / 100);
     if (amountToFill <= 0) {
-      showStatus('Insufficient staked balance', 'error');
+      showError('Insufficient staked balance');
       return;
     }
     setUnstakeAmount(amountToFill.toFixed(4));
-    showStatus(`✅ ${percentage}% of staked balance set: ${amountToFill.toFixed(4)} $ORNE`, 'success');
+    showSuccess(`${percentage}% of staked balance set: ${amountToFill.toFixed(4)} $ORNE`);
   };
 
   const requestUnstake = async () => {
     if (!unstakeAmount || unstakeAmount <= 0) {
-      showStatus('Please enter a valid amount', 'error');
+      showError('Please enter a valid amount');
       return;
     }
     
     try {
       setLoading(true);
-      showStatus('Requesting unstaking...', 'warning');
+      showWarning('Requesting unstaking...');
       
       const stakedBalance = parseFloat(userStats.stakedBalance);
       const requestAmount = parseFloat(unstakeAmount);
       
       if (requestAmount > stakedBalance) {
-        showStatus('Error: Amount exceeds staked balance', 'error');
+        showError('Error: Amount exceeds staked balance');
         return;
       }
       
-      const amountWei = parseEther(unstakeAmount);
+      const amountWei = parseEtherFixed(unstakeAmount);
       const amountHex = amountWei.toString(16).padStart(64, '0');
       const data = getMethodSignature('requestUnstake(uint256)') + amountHex;
       
       const txHash = await sendTransaction(CONFIG.STAKING_VAULT_ADDRESS, data, address, '0x0', undefined);
-      showStatus(`⏳ Unstaking sent (${txHash.slice(0, 10)}...)`, 'warning');
+      showInfo(`Unstaking sent (${txHash.slice(0, 10)}...)`);
       
       await waitForTransaction(txHash, 'Unstaking');
       
-      showStatus(`✅ Unstaking confirmed! Wait 21 days.`, 'success');
+      showSuccess(`Unstaking confirmed! Wait 21 days.`);
       setUnstakeAmount('');
       
       setTimeout(() => {
@@ -200,7 +204,7 @@ const Staking = ({
       
     } catch (error) {
       console.error('Erreur unstaking:', error);
-      showStatus('Error: ' + (error.message || 'Unknown'), 'error');
+      showError('Error: ' + (error.message || 'Unknown'));
     } finally {
       setLoading(false);
     }
@@ -209,16 +213,16 @@ const Staking = ({
   const unstakeTokens = async () => {
     try {
       setLoading(true);
-      showStatus('Recovering tokens...', 'warning');
+      showWarning('Recovering tokens...');
       
       const data = getMethodSignature('unstake()');
       const txHash = await sendTransaction(CONFIG.STAKING_VAULT_ADDRESS, data, address, '0x0', undefined);
       
-      showStatus(`⏳ Recovery sent (${txHash.slice(0, 10)}...)`, 'warning');
+      showInfo(`Recovery sent (${txHash.slice(0, 10)}...)`);
       
       await waitForTransaction(txHash, 'Recovery of tokens');
       
-      showStatus(`🎉 Tokens recovered successfully!`, 'success');
+      showSuccess(`Tokens recovered successfully!`);
       setTimeout(() => {
         loadUserData();
         loadGlobalStats();
@@ -226,7 +230,7 @@ const Staking = ({
       
     } catch (error) {
       console.error('Erreur de récupération:', error);
-      showStatus('Erreur: ' + (error.message || 'Inconnue'), 'error');
+      showError('Error: ' + (error.message || 'Unknown'));
     } finally {
       setLoading(false);
     }
@@ -235,12 +239,12 @@ const Staking = ({
   const claimRewards = async () => {
     try {
       setLoading(true);
-      showStatus('Recovering rewards...', 'warning');
+      showWarning('Recovering rewards...');
       
       const data = getMethodSignature('claimRewards()');
       const txHash = await sendTransaction(CONFIG.STAKING_VAULT_ADDRESS, data, address, '0x0', undefined);
       
-      showStatus(`Rewards recovered! Hash: ${txHash.slice(0, 10)}...`, 'success');
+      showSuccess(`Rewards recovered! Hash: ${txHash.slice(0, 10)}...`);
       setTimeout(() => {
         loadUserData();
         loadGlobalStats();
@@ -248,7 +252,7 @@ const Staking = ({
       
     } catch (error) {
       console.error('Erreur de récupération des rewards:', error);
-      showStatus('Erreur: ' + (error.message || 'Inconnue'), 'error');
+      showError('Error: ' + (error.message || 'Unknown'));
     } finally {
       setLoading(false);
     }
@@ -257,16 +261,16 @@ const Staking = ({
   const cancelUnstake = async () => {
     try {
       setLoading(true);
-      showStatus('Cancelling unstaking request...', 'warning');
+      showWarning('Cancelling unstaking request...');
       
       const data = getMethodSignature('cancelUnstake()');
       const txHash = await sendTransaction(CONFIG.STAKING_VAULT_ADDRESS, data, address, '0x0', undefined);
       
-      showStatus(`⏳ Cancellation sent (${txHash.slice(0, 10)}...)`, 'warning');
+      showInfo(`Cancellation sent (${txHash.slice(0, 10)}...)`);
       
       await waitForTransaction(txHash, 'Cancellation');
       
-      showStatus(`✅ Unstaking request cancelled!`, 'success');
+      showSuccess(`Unstaking request cancelled!`);
       
       setTimeout(() => {
         loadUserData();
@@ -275,7 +279,7 @@ const Staking = ({
       
     } catch (error) {
       console.error('Erreur d\'annulation:', error);
-      showStatus('Erreur: ' + (error.message || 'Inconnue'), 'error');
+      showError('Error: ' + (error.message || 'Unknown'));
     } finally {
       setLoading(false);
     }
@@ -563,6 +567,8 @@ const Staking = ({
           </div>
         )}
       </div>
+      
+
     </>
   );
 };

@@ -10,8 +10,10 @@ app.use(express.json()); // Ajouter cette ligne pour parser le JSON
 
 const PORT = process.env.PORT || 4000;
 
-// Adresse du contrat et ABI minimale
-const CONTRACT_ADDRESS = "0x62A8347f59491F38d13EEe04c2C481bBAa0Ae326";
+// MAINNET CONFIG: All addresses below are for Arbitrum One mainnet
+const CONTRACT_ADDRESS = "0x100156F27A3686a4da7fEE7148520A229320e7c8"; // Staking Vault mainnet
+const ORNE_TOKEN_ADDRESS = "0x89DbdB8e3b0e41aAe0871Bf9e1fcCe72F117bB1f";
+const ADMIN_ADDRESS = "0x38b27cb0339334e0ac2B73D0bF5B57b6Fc3Db8c5";
 const ABI = [
   "function getTotalPendingUnstakes() view returns (uint256)",
   "function getUniqueHoldersCount() view returns (uint256)",
@@ -21,8 +23,8 @@ const ABI = [
   "function totalStaked() view returns (uint256)"
 ];
 
-// RPC Arbitrum Sepolia (mets ta clé Alchemy/Infura si besoin)
-const RPC_URL = "https://sepolia-rollup.arbitrum.io/rpc";
+// RPC Arbitrum Mainnet
+const RPC_URL = "https://arb-mainnet.g.alchemy.com/v2/-ofb30ntFCdQjf6j0VbjwHdTu7Yubcw5";
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
@@ -41,10 +43,10 @@ app.get('/api/global-staked', async (req, res) => {
 // Nombre de détenteurs uniques (via Arbiscan)
 app.get('/api/global-holders', async (req, res) => {
   try {
-    const tokenAddress = "0xaf3acac72af103dc0aded53f1cc08638f856bf8f";
+    const tokenAddress = ORNE_TOKEN_ADDRESS;
     const apiKey = process.env.ARBISCAN_API_KEY;
-    // Fallback: récupère les 1000 dernières txs du token
-    const url = `https://api-sepolia.arbiscan.io/api?module=account&action=tokentx&contractaddress=${tokenAddress}&page=1&offset=1000&sort=desc&apikey=${apiKey}`;
+    // Use Arbiscan mainnet API
+    const url = `https://api.arbiscan.io/api?module=account&action=tokentx&contractaddress=${tokenAddress}&page=1&offset=1000&sort=desc&apikey=${apiKey}`;
     const response = await axios.get(url);
 	console.log('Arbiscan tokentx response:', response.data);
     const txs = response.data.result;
@@ -128,12 +130,12 @@ app.get('/api/global-rewards-distributed', async (req, res) => {
 // Balance du wallet admin (pour calculer le circulating supply)
 app.get('/api/admin-balance', async (req, res) => {
   try {
-    const adminAddress = "0x734af0e9a54029b28ebcbba144b13264e0eac6fe";
+    // Use new admin address
     const ABI = [
       "function balanceOf(address) view returns (uint256)"
     ];
-    const tokenContract = new ethers.Contract("0xaf3acac72af103Dc0adeD53F1CC08638f856Bf8F", ABI, provider);
-    const balance = await tokenContract.balanceOf(adminAddress);
+    const tokenContract = new ethers.Contract(ORNE_TOKEN_ADDRESS, ABI, provider);
+    const balance = await tokenContract.balanceOf(ADMIN_ADDRESS);
     res.json({ adminBalance: ethers.formatUnits(balance, 18) });
   } catch (err) {
     console.error(err);

@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import LiveChart from './SimpleChart';
+import React, { useState, useEffect } from 'react';
+import { useUniswapV3PoolData } from '../hooks/useUniswapV3PoolData';
+import { useWethPrice } from '../hooks/useWethPrice';
+import SimpleChart from './SimpleChart';
 import InfoTooltip from './InfoTooltip';
 import ornePriceIcon from '../images/orne-price.png';
 import circulatingOrneIcon from '../images/circulating-orne.png';
@@ -7,18 +9,35 @@ import distributedOrneIcon from '../images/distributed-orne.png';
 import userStakingIcon from '../images/user-staking.png';
 
 const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles }) => {
-  const {
-    ornePrice,
-    circulatingSupply,
-    totalCO2Offset
-  } = dashboardData;
-
-  // State pour les données historiques
-  const [stakingHistory, setStakingHistory] = useState([]);
-  const [co2History, setCO2History] = useState([]);
-  // State pour la période sélectionnée
   const [stakingPeriod, setStakingPeriod] = useState('1m');
   const [co2Period, setCO2Period] = useState('1m');
+  const [stakingHistory, setStakingHistory] = useState([]);
+  const [co2History, setCO2History] = useState([]);
+
+  // Use pool data directly like Swap component
+  const uniswapData = useUniswapV3PoolData();
+  const wethPrice = useWethPrice();
+
+  // Calculate price directly from pool data
+  const price = uniswapData?.price ? parseFloat(uniswapData.price) : 0;
+  const priceUSD = price > 0 && wethPrice.usd ? price * wethPrice.usd : 0;
+
+  // Calculate market cap
+  const circulatingSupply = 100000000 - parseFloat(globalStats.totalStaked) - parseFloat(globalStats.adminBalance || 0);
+  const marketCap = priceUSD > 0 ? circulatingSupply * priceUSD : null;
+  const totalMarketCap = priceUSD > 0 ? 100000000 * priceUSD : null;
+
+  // Calculate total CO2 offset
+  const totalCO2Offset = (() => {
+    if (window.orneGlobalStatsV5?.totalCO2OffsetKg !== undefined) {
+      return window.orneGlobalStatsV5.totalCO2OffsetKg.toFixed(3);
+    }
+    const totalStakedNumber = parseFloat(globalStats.totalStaked);
+    const co2PerOrneNumber = parseFloat(globalStats.co2PerOrne.replace(/,/g, '')) || 0;
+    if (totalStakedNumber === 0 || co2PerOrneNumber === 0) return 0;
+    const totalCO2Grams = totalStakedNumber * co2PerOrneNumber;
+    return (totalCO2Grams / 1000).toFixed(3);
+  })();
 
   useEffect(() => {
     fetch('/api/history-staked')
@@ -111,7 +130,7 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">${ornePrice.toFixed(3)}</div>
+          <div className="stat-value">${priceUSD ? priceUSD.toFixed(6) : 'N/A'}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
@@ -178,7 +197,7 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
             <PeriodSelector period={stakingPeriod} setPeriod={setStakingPeriod} color="#89be83" />
           </div>
         </div>
-        <LiveChart
+        <SimpleChart
           data={stakingHistory}
           color="#89be83"
           dataKey="totalStaked"
@@ -211,7 +230,7 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
             <PeriodSelector period={co2Period} setPeriod={setCO2Period} color="#28a745" />
           </div>
         </div>
-        <LiveChart
+        <SimpleChart
           data={co2History}
           color="#28a745"
           dataKey="totalCO2"

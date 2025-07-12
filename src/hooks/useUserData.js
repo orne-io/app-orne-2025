@@ -19,6 +19,23 @@ export const useUserData = (globalStats) => {
     if (!isConnected || !address) return;
     
     try {
+      // Appels de contrat avec gestion d'erreur individuelle
+      const contractCalls = [
+        callContract(CONFIG.ORNE_TOKEN_ADDRESS, 'balanceOf(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'stakes(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'pendingRewards(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'getUnstakeInfo(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        // Gestion spéciale pour co2OffsetOf qui peut échouer
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'co2OffsetOf(address)', [address]).catch((error) => {
+          console.warn('co2OffsetOf failed, using fallback:', error);
+          return '0x0000000000000000000000000000000000000000000000000000000000000000';
+        }),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'canUnstake(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'timeUntilUnstake(address)', [address]).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'co2PerOrne()', []).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000001'),
+        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'totalStaked()', []).catch(() => '0x0000000000000000000000000000000000000000000000000000000000000000')
+      ];
+      
       const [
         orneBalanceHex,
         stakeInfoHex,
@@ -29,17 +46,7 @@ export const useUserData = (globalStats) => {
         timeUntilUnstakeHex,
         co2PerOrneHex,
         totalStakedHex
-      ] = await Promise.all([
-        callContract(CONFIG.ORNE_TOKEN_ADDRESS, 'balanceOf(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'stakes(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'pendingRewards(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'getUnstakeInfo(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'co2OffsetOf(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'canUnstake(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'timeUntilUnstake(address)', [address]),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'co2PerOrne()', []),
-        callContract(CONFIG.STAKING_VAULT_ADDRESS, 'totalStaked()', [])
-      ]);
+      ] = await Promise.all(contractCalls);
       
       const orneBalance = decodeResult(orneBalanceHex, 'uint256');
       const pendingRewards = decodeResult(pendingRewardsHex, 'uint256');
@@ -90,8 +97,6 @@ export const useUserData = (globalStats) => {
           userCO2Offset = myCO2Kg;
         }
       }
-      
-      // console.log('CO2 Offset final affiché:', userCO2Offset); // Supprimé pour éviter le spam
       
       setUserStats({
         orneBalance,

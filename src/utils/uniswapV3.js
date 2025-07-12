@@ -10,8 +10,8 @@ export const UNISWAP_V3_POOL_ABI = [
   'function decimals() external view returns (uint8)',
 ];
 
-// Placeholder: ORNE/WETH pool address on mainnet (to be replaced with real one)
-export const ORNE_WETH_V3_POOL = '0x0000000000000000000000000000000000000000';
+// MAINNET: ORNE/WETH Uniswap V3 pool address
+export const ORNE_WETH_V3_POOL = '0x198d0136c5e7766572F6918eda7ac2B576B43d2f'; // Mainnet pool
 
 // Helper to get price and pooled tokens from a Uniswap V3 pool
 export async function getUniswapV3PoolData(poolAddress, token0Decimals, token1Decimals, provider) {
@@ -22,14 +22,23 @@ export async function getUniswapV3PoolData(poolAddress, token0Decimals, token1De
     pool.liquidity(),
   ]);
   // sqrtPriceX96 is a Q64.96 value
-  const sqrtPriceX96 = slot0[0];
-  // Price calculation: (sqrtPriceX96 ** 2) / 2**192
-  // This gives price of token1 in terms of token0
-  const price = (sqrtPriceX96 ** 2) / (2n ** 192n);
-  // Adjust for decimals
-  const adjustedPrice = Number(price) * 10 ** (token0Decimals - token1Decimals);
+  const sqrtPriceX96 = ethers.toBigInt(slot0[0]);
+  const Q96 = 2n ** 96n;
+  // (sqrtPriceX96 / Q96) ** 2
+  const priceInWETH_BI = (sqrtPriceX96 * sqrtPriceX96 * 10n ** 18n) / (Q96 * Q96);
+  const priceInWETH = Number(priceInWETH_BI) / 1e18;
+
+  // Correction : on veut le prix de 1 ORNE en WETH
+  // Si ORNE est token0, il faut inverser le prix
+  let adjustedPrice;
+  if (token0Decimals === 18 && token1Decimals === 18) {
+    // On suppose ORNE est token0, WETH est token1
+    adjustedPrice = 1 / priceInWETH;
+  } else {
+    // Sinon, on garde le prix tel quel
+    adjustedPrice = priceInWETH;
+  }
   // Get pooled token balances
-  // For V3, you need to get token0/token1 addresses and their balances in the pool
   const [token0, token1] = await Promise.all([
     pool.token0(),
     pool.token1(),

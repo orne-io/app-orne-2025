@@ -71,8 +71,10 @@ export const styles = {
   },
   main: {
     maxWidth: '1200px',
+    width: '100%',
     margin: '0 auto',
-    padding: '30px 20px'
+    padding: '30px 20px',
+    boxSizing: 'border-box'
   },
   card: {
     backgroundColor: '#fcf9f8',

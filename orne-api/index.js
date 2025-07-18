@@ -4,7 +4,7 @@ const { ethers } = require('ethers');
 require('dotenv').config();
 const axios = require('axios');
 const Database = require('better-sqlite3');
-const SQLITE_PATH = './events.sqlite';
+const SQLITE_PATH = './events-api.sqlite';
 
 const app = express();
 app.use(cors());
@@ -116,10 +116,14 @@ app.get('/api/global-co2', async (req, res) => {
 app.get('/api/global-holders', async (req, res) => {
   try {
     const db = new Database(SQLITE_PATH, { readonly: true });
-    // On considère tous les users ayant au moins un event Staked ou Unstaked
-    const users = db.prepare(`SELECT DISTINCT user FROM events WHERE user IS NOT NULL AND user != ''`).all();
+    // Compte toutes les adresses distinctes ayant reçu des ORNE (hors mint vers 0x0)
+    const holders = db.prepare(`
+      SELECT COUNT(DISTINCT "to") as count
+      FROM erc20_transfers
+      WHERE "to" != '0x0000000000000000000000000000000000000000'
+    `).get();
     db.close();
-    res.json({ uniqueHolders: users.length });
+    res.json({ uniqueHolders: holders.count });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur global-holders (sqlite)' });
@@ -402,7 +406,7 @@ app.get('/api/holders', async (req, res) => {
 
     // 4. Merge and compute liquid
     const result = allAddresses.map(addr => {
-      const totalHolding = balances[addr]?.totalHolding || 0;
+      let totalHolding = balances[addr]?.totalHolding || 0;
       const totalStaking = staking[addr]?.totalStaking || 0;
       const totalUnstaking = staking[addr]?.totalUnstaking || 0;
       const totalUnstaked = staking[addr]?.totalUnstaked || 0;
@@ -410,6 +414,8 @@ app.get('/api/holders', async (req, res) => {
       const currentlyStaked = totalStaking - totalUnstaking - totalUnstaked;
       // Unstaking in progress = totalUnstaking - totalUnstaked
       const unstaking = totalUnstaking - totalUnstaked;
+      // Correction : totalHolding doit être au moins égal à currentlyStaked
+      if (currentlyStaked > totalHolding) totalHolding = currentlyStaked;
       // Liquid = totalHolding - currentlyStaked - unstaking
       const liquid = totalHolding - currentlyStaked - unstaking;
       return {

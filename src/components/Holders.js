@@ -4,6 +4,7 @@ import distributedOrneIcon from '../images/distributed-orne.png';
 import circulatingOrneIcon from '../images/circulating-orne.png';
 import userStakingIcon from '../images/user-staking.png';
 import totalHoldersIcon from '../images/total-holders.png';
+import balanceOrneIcon from '../images/balance-orne.png';
 import { useGlobalStats } from '../hooks/useGlobalStats';
 
 const ARBISCAN_URL = 'https://arbiscan.io/address/';
@@ -40,10 +41,52 @@ function Holders() {
   const [holders, setHolders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { globalStats } = useGlobalStats();
+  const { globalStats, loadGlobalStats } = useGlobalStats();
   const loadingStats = !globalStats || globalStats.totalStaked === undefined || globalStats.adminBalance === undefined;
+  const [sortBy, setSortBy] = useState('totalHolding');
+  const [sortOrder, setSortOrder] = useState('desc');
+
+  // Fonction de tri
+  function handleSort(col) {
+    if (sortBy === col) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(col);
+      setSortOrder('desc');
+    }
+  }
+
+  function getChevron(col) {
+    if (sortBy !== col) return null;
+    return sortOrder === 'asc' ? ' ▲' : ' ▼';
+  }
+
+  // Tri dynamique
+  const sorted = holders.slice().sort((a, b) => {
+    let vA = a[sortBy], vB = b[sortBy];
+    if (sortBy === 'address') {
+      vA = vA.toLowerCase();
+      vB = vB.toLowerCase();
+      if (vA < vB) return sortOrder === 'asc' ? -1 : 1;
+      if (vA > vB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    } else {
+      vA = Number(vA);
+      vB = Number(vB);
+      return sortOrder === 'asc' ? vA - vB : vB - vA;
+    }
+  });
+
+  // Correction affichage total holders
+  const totalHolders = window.orneGlobalStatsV5?.uniqueHolders != null && window.orneGlobalStatsV5.uniqueHolders !== window.orneGlobalStatsV5.uniqueStakers
+    ? Number(window.orneGlobalStatsV5.uniqueHolders).toLocaleString('en-US', { maximumFractionDigits: 0 })
+    : 'N/A';
+
+  // Calcul circulating supply comme dans Dashboard
+  const circulatingSupply = 100000000 - parseFloat(globalStats.totalStaked || 0) - parseFloat(globalStats.adminBalance || 0);
 
   useEffect(() => {
+    loadGlobalStats();
     fetch('/api/holders')
       .then(res => res.json())
       .then(data => {
@@ -54,16 +97,10 @@ function Holders() {
         setError('Error loading holders');
         setLoading(false);
       });
-  }, []);
+  }, [loadGlobalStats]);
 
-  if (loading || loadingStats) return <div className="text-center mt-20" style={{ color: '#383e5c' }}>Loading...</div>;
+  if (loading) return <div className="text-center mt-20" style={{ color: '#383e5c' }}>Loading...</div>;
   if (error) return <div className="alert alert-error text-center mt-20">{error}</div>;
-
-  // Sort by totalHolding descending
-  const sorted = holders.slice().sort((a, b) => b.totalHolding - a.totalHolding);
-
-  // Calcul circulating supply comme dans Dashboard
-  const circulatingSupply = 100000000 - parseFloat(globalStats.totalStaked || 0) - parseFloat(globalStats.adminBalance || 0);
 
   return (
     <>
@@ -80,7 +117,7 @@ function Holders() {
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">100,000,000</div>
+          <div className="stat-value">{Number(100000000).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
@@ -94,7 +131,7 @@ function Holders() {
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">{circulatingSupply.toLocaleString('en-US')}</div>
+          <div className="stat-value">{Number(circulatingSupply).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
@@ -108,7 +145,7 @@ function Holders() {
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">{window.orneGlobalStatsV5?.uniqueHolders != null ? window.orneGlobalStatsV5.uniqueHolders.toLocaleString('en-US') : 'N/A'}</div>
+          <div className="stat-value">{totalHolders}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
@@ -122,20 +159,28 @@ function Holders() {
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">{window.orneGlobalStatsV5?.uniqueStakers != null ? window.orneGlobalStatsV5.uniqueStakers.toLocaleString('en-US') : 'N/A'}</div>
+          <div className="stat-value">{window.orneGlobalStatsV5?.uniqueStakers != null ? Number(window.orneGlobalStatsV5.uniqueStakers).toLocaleString('en-US', { maximumFractionDigits: 0 }) : 'N/A'}</div>
         </div>
       </div>
-      <div className="card" style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <h2 className="title text-center mb-20">$ORNE Token Holders</h2>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ width: '100%', minWidth: 520 }}>
+      <div className="card">
+        <h3 className="title flex items-center" style={{ gap: 8, justifyContent: 'flex-start', marginBottom: 18 }}>
+          <img src={balanceOrneIcon} alt="$ORNE Holders" style={{ width: 28, height: 28, marginRight: 6, verticalAlign: 'middle' }} />
+          $ORNE Token Holders
+          <InfoTooltip title="$ORNE Token Holders" content="List of all $ORNE token holders, their total, liquid, staked and unstaking balances.">
+            <span className="tooltip-icon text-secondary">
+              <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
+            </span>
+          </InfoTooltip>
+        </h3>
+        <div className="transaction-history" style={{ maxHeight: 480, overflowY: 'auto', marginTop: 0 }}>
+          <table>
             <thead>
               <tr>
-                <th className="text-left">Address</th>
-                <th className="text-right">Total holding</th>
-                <th className="text-right">Liquid</th>
-                <th className="text-right">Staking</th>
-                <th className="text-right">Unstaking</th>
+                <th className="text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort('address')}>Address{getChevron('address')}</th>
+                <th className="text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort('totalHolding')}>Total holding{getChevron('totalHolding')}</th>
+                <th className="text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort('totalLiquid')}>Liquid{getChevron('totalLiquid')}</th>
+                <th className="text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort('totalStaking')}>Staking{getChevron('totalStaking')}</th>
+                <th className="text-center" style={{ cursor: 'pointer' }} onClick={() => handleSort('totalUnstaking')}>Unstaking{getChevron('totalUnstaking')}</th>
               </tr>
             </thead>
             <tbody>
@@ -144,13 +189,13 @@ function Holders() {
               )}
               {sorted.map(h => (
                 <tr key={h.address}>
-                  <td style={{ fontFamily: 'monospace', maxWidth: 220, overflowWrap: 'break-word' }}>
+                  <td className="text-center" style={{ fontFamily: 'monospace', maxWidth: 220, overflowWrap: 'break-word' }}>
                     <a href={ARBISCAN_URL + h.address} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{h.address}</a>
                   </td>
-                  <td className="text-right">{h.totalHolding.toLocaleString('en-US', { maximumFractionDigits: 4 })}</td>
-                  <td className="text-right">{h.totalLiquid.toLocaleString('en-US', { maximumFractionDigits: 4 })}</td>
-                  <td className="text-right">{h.totalStaking.toLocaleString('en-US', { maximumFractionDigits: 4 })}</td>
-                  <td className="text-right">{h.totalUnstaking.toLocaleString('en-US', { maximumFractionDigits: 4 })}</td>
+                  <td className="text-center">{Number(h.totalHolding).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
+                  <td className="text-center">{Number(h.totalLiquid).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
+                  <td className="text-center">{Number(h.totalStaking).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
+                  <td className="text-center">{Number(h.totalUnstaking).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>

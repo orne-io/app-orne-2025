@@ -313,21 +313,42 @@ const Staking = ({
           <div className="stat-icon">
             <img src={balanceOrneIcon} alt="Balance $ORNE" />
           </div>
-          <div className="stat-label">Balance $ORNE</div>
+          <div className="stat-label">
+            Balance $ORNE
+            <InfoTooltip title="Balance $ORNE" content="Your current $ORNE token balance available in your wallet.">
+              <span className="tooltip-icon text-primary">
+                <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
+              </span>
+            </InfoTooltip>
+          </div>
           <div className="stat-value">{parseFloat(userStats.orneBalance).toFixed(2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
             <img src={stakedOrneIcon} alt="Staked $ORNE" />
           </div>
-          <div className="stat-label">Staked $ORNE</div>
+          <div className="stat-label">
+            Staked $ORNE
+            <InfoTooltip title="Staked $ORNE" content="Total $ORNE tokens you have currently staked in the vault.">
+              <span className="tooltip-icon text-primary">
+                <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
+              </span>
+            </InfoTooltip>
+          </div>
           <div className="stat-value">{parseFloat(userStats.stakedBalance).toFixed(2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">
             <img src={rewardsIcon} alt="Rewards" />
           </div>
-          <div className="stat-label">Rewards</div>
+          <div className="stat-label">
+            Rewards
+            <InfoTooltip title="Rewards" content="$ORNE tokens you have earned as staking rewards and can claim.">
+              <span className="tooltip-icon text-primary">
+                <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
+              </span>
+            </InfoTooltip>
+          </div>
           <div className="stat-value">{parseFloat(userStats.pendingRewards).toFixed(4)} $ORNE</div>
           {parseFloat(userStats.pendingRewards) > 0 && (
             <button
@@ -344,7 +365,14 @@ const Staking = ({
           <div className="stat-icon">
             <img src={unstakingIcon} alt="Unstaking" />
           </div>
-          <div className="stat-label">Unstaking</div>
+          <div className="stat-label">
+            Unstaking
+            <InfoTooltip title="Unstaking" content="$ORNE tokens you have requested to unstake and are waiting for the delay to finish.">
+              <span className="tooltip-icon text-primary">
+                <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
+              </span>
+            </InfoTooltip>
+          </div>
           <div className="stat-value">{parseFloat(userStats.unstakingAvailable).toFixed(2)}</div>
         </div>
       </div>

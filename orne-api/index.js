@@ -5,6 +5,7 @@ require('dotenv').config();
 const axios = require('axios');
 const Database = require('better-sqlite3');
 const SQLITE_PATH = './events-api.sqlite';
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
@@ -431,6 +432,34 @@ app.get('/api/holders', async (req, res) => {
   } catch (err) {
     console.error('Holders API error:', err);
     res.status(500).json({ error: 'Error in holders (sqlite)' });
+  }
+});
+
+// === INDEXER STATUS ===
+app.get('/api/indexer-status', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // Dernier block indexé
+    const lastBlockRow = db.prepare('SELECT value FROM meta WHERE key = ?').get('lastBlock');
+    const lastBlock = lastBlockRow ? Number(lastBlockRow.value) : null;
+    // Date de la dernière action sur la dapp (dernier event ou transfert)
+    const lastEvent = db.prepare('SELECT MAX(timestamp) as ts FROM events').get();
+    const lastTransfer = db.prepare('SELECT MAX(timestamp) as ts FROM erc20_transfers').get();
+    let lastTimestamp = 0;
+    if (lastEvent && lastEvent.ts) lastTimestamp = lastEvent.ts;
+    if (lastTransfer && lastTransfer.ts && lastTransfer.ts > lastTimestamp) lastTimestamp = lastTransfer.ts;
+    const lastActionDate = lastTimestamp ? new Date(lastTimestamp * 1000).toISOString() : null;
+    db.close();
+    // Date de dernière modification physique du fichier DB
+    let dbLastModified = null;
+    try {
+      const stats = fs.statSync('./events-api.sqlite');
+      dbLastModified = stats.mtime.toISOString();
+    } catch {}
+    res.json({ lastBlock, lastActionDate, dbLastModified });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur indexer-status (sqlite)' });
   }
 });
 

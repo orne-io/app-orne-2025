@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunkorne_dapp=self.webpackChunkorne_dapp||[]).push([[7695],{7695:(e,p,a)=>{a.r(p),a.d(p,{default:()=>n.n});var n=a(42499)}}]);

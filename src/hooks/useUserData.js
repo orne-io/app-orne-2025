@@ -81,11 +81,6 @@ export const useUserData = (globalStats) => {
         const myStakedNumber = parseFloat(stakedBalance);
         const co2PerOrneNumber = parseFloat(String(globalStats.co2PerOrne).replace(/,/g, '')) || 0;
         
-        console.log('=== CALCUL CO2 OFFSET ===');
-        console.log('Total ORNE stakés:', totalStakedNumber);
-        console.log('Mes ORNE stakés:', myStakedNumber);
-        console.log('CO2 par ORNE (grammes):', co2PerOrneNumber);
-        
         if (totalStakedNumber > 0 && co2PerOrneNumber > 0) {
           const totalCO2Grams = totalStakedNumber * co2PerOrneNumber;
           const otherStakedNumber = totalStakedNumber - myStakedNumber;
@@ -93,7 +88,6 @@ export const useUserData = (globalStats) => {
           const myCO2Grams = totalCO2Grams - otherCO2Grams;
           const myCO2Kg = (myCO2Grams / 1000).toFixed(3);
           
-          console.log('Mon CO2 (kg):', myCO2Kg);
           userCO2Offset = myCO2Kg;
         }
       }

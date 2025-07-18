@@ -7,7 +7,6 @@ import {
   getCurrentAllowance,
   encodeUint256,
   encodeUint256Admin,
-  encodeAddress,
   getMethodSignature,
   getApproveData
 } from '../utils/contractUtils';
@@ -67,33 +66,22 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
     const hasAdminHash = urlHash === '#admin';
     if (hasAdminHash && isConnected && address) {
       try {
-        console.log('Checking admin access for address:', address);
-        console.log('Expected admin address:', MAINNET_ADMIN_ADDRESS);
-        
         const ownerHex = await callContract(CONFIG.STAKING_VAULT_ADDRESS, 'owner()', []);
-        console.log('Owner hex result:', ownerHex);
         
         if (ownerHex && ownerHex.length > 2) {
           const ownerAddress = '0x' + ownerHex.slice(-40);
-          console.log('Decoded owner address:', ownerAddress);
           
           const isOwner = ownerAddress.toLowerCase() === MAINNET_ADMIN_ADDRESS.toLowerCase();
           const isCurrentUser = address.toLowerCase() === MAINNET_ADMIN_ADDRESS.toLowerCase();
-          
-          console.log('Is owner check:', isOwner);
-          console.log('Is current user:', isCurrentUser);
           
           if (isOwner || isCurrentUser) {
             setShowAdminPanel(true);
             setAdminData(prev => ({ ...prev, isOwner: true }));
             loadAdminHistory();
-            console.log('Admin access granted');
           } else {
             showStatus('❌ Access denied: You are not the contract owner', 'error');
-            console.log('Admin access denied');
           }
         } else {
-          console.log('No owner data received');
           showStatus('❌ Could not verify contract ownership', 'error');
         }
       } catch (error) {
@@ -122,7 +110,7 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
       setLoading(true);
       showStatus('🌱 Adding CO2...', 'warning');
 
-      console.log('Adding CO2 with address:', address);
+
 
       // Utiliser encodeUint256Admin pour les fonctions admin (pas de conversion wei)
       const tonnes = encodeUint256Admin(adminData.co2ToAdd);
@@ -165,7 +153,7 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
     try {
       setLoading(true);
 
-      console.log('Distributing rewards with address:', address);
+
 
       // Vérifier l'allowance d'abord
       showStatus('🔍 Vérification de l\'allowance...', 'warning');
@@ -229,7 +217,7 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
       setLoading(true);
       showStatus('⏱️ Updating unstaking delay...', 'warning');
 
-      console.log('Setting unstaking delay with address:', address);
+
 
       const response = await fetch('/api/set-unstaking-delay', {
         method: 'POST',

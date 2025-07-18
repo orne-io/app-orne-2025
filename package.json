@@ -2,6 +2,7 @@
   "name": "orne-dapp",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:4000",
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.8",
     "@tanstack/react-query": "^5.82.0",
@@ -10,6 +11,7 @@
     "ethers": "^6.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-is": "^19.1.0",
     "react-responsive": "^10.0.1",
     "react-scripts": "5.0.1",
     "recharts": "^3.1.0",
@@ -18,10 +20,17 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "start": "react-scripts start",
+    "start:testnet": "REACT_APP_ENV=testnet react-scripts start",
     "build": "react-scripts build",
+    "build:safe": "node scripts/build-safe.js",
+    "build:safe:testnet": "node scripts/build-safe-testnet.js",
+    "build:testnet": "REACT_APP_ENV=testnet react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "setup:testnet": "node scripts/setup-testnet.js",
+    "deploy:testnet": "hardhat run scripts/deploy-testnet.js --network arbitrumSepolia"
   },
   "eslintConfig": {
     "extends": [
@@ -40,5 +49,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "resolutions": {
+    "webpack-dev-server": "4.11.1"
   }
 }

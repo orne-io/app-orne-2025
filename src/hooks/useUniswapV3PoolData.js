@@ -195,26 +195,12 @@ export const useUniswapV3PoolData = () => {
         const orneBalance = orneBalanceData.data;
         const wethBalance = wethBalanceData.data;
 
-        console.log('Raw pool data:', {
-          liquidity: liquidity.toString(),
-          sqrtPriceX96: sqrtPriceX96.toString(),
-          tick: tick.toString(),
-          token0,
-          token1,
-          orneBalance: orneBalance.toString(),
-          wethBalance: wethBalance.toString()
-        });
+
 
         // Calculate price from sqrtPriceX96
         const price = (Number(sqrtPriceX96) / (2 ** 96)) ** 2;
         
         // Determine which token is ORNE and which is WETH
-        console.log('Token addresses:', {
-          ORNE_ADDRESS: ORNE_ADDRESS.toLowerCase(),
-          WETH_ADDRESS: WETH_ADDRESS.toLowerCase(),
-          token0: token0.toLowerCase(),
-          token1: token1.toLowerCase()
-        });
         
         let calculatedPrice;
         
@@ -230,14 +216,7 @@ export const useUniswapV3PoolData = () => {
         const orneLiquidityFormatted = (Number(orneBalance) / (10 ** 18)).toFixed(2);
         const wethLiquidityFormatted = (Number(wethBalance) / (10 ** 18)).toFixed(6);
 
-        console.log('Calculated values:', {
-          price,
-          calculatedPrice,
-          orneBalance: orneBalance.toString(),
-          wethBalance: wethBalance.toString(),
-          orneLiquidityFormatted,
-          wethLiquidityFormatted
-        });
+
 
         setPoolData({
           liquidity: liquidity.toString(),
@@ -252,14 +231,7 @@ export const useUniswapV3PoolData = () => {
           error: null
         });
 
-        console.log('Pool data updated:', {
-          orneLiquidity: orneLiquidityFormatted,
-          wethLiquidity: wethLiquidityFormatted,
-          price: calculatedPrice.toFixed(12),
-          tick: tick.toString(),
-          rawLiquidity: Number(liquidity),
-          rawPrice: price
-        });
+
 
       } catch (error) {
         console.error('Error calculating pool data:', error);
@@ -325,23 +297,7 @@ export const useUniswapV3PoolData = () => {
   }, [liquidityData.error, slot0Data.error, token0Data.error, token1Data.error,
       orneBalanceData.error, wethBalanceData.error]);
 
-  // Debug logs
-  useEffect(() => {
-    console.log('Pool data loading states:', {
-      liquidityLoading: liquidityData.isLoading,
-      slot0Loading: slot0Data.isLoading,
-      token0Loading: token0Data.isLoading,
-      token1Loading: token1Data.isLoading,
-      orneBalanceLoading: orneBalanceData.isLoading,
-      wethBalanceLoading: wethBalanceData.isLoading,
-      liquidityData: liquidityData.data,
-      slot0Data: slot0Data.data,
-      token0Data: token0Data.data,
-      token1Data: token1Data.data,
-      orneBalanceData: orneBalanceData.data,
-      wethBalanceData: wethBalanceData.data
-    });
-  }, [liquidityData, slot0Data, token0Data, token1Data, orneBalanceData, wethBalanceData]);
+
 
   return poolData;
 }; 

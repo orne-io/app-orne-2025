@@ -17,9 +17,8 @@ export const ORNE_WETH_V3_POOL = '0x198d0136c5e7766572F6918eda7ac2B576B43d2f'; /
 export async function getUniswapV3PoolData(poolAddress, token0Decimals, token1Decimals, provider) {
   const pool = new ethers.Contract(poolAddress, UNISWAP_V3_POOL_ABI, provider);
   // Get slot0 for price
-  const [slot0, liquidity] = await Promise.all([
+  const [slot0] = await Promise.all([
     pool.slot0(),
-    pool.liquidity(),
   ]);
   // sqrtPriceX96 is a Q64.96 value
   const sqrtPriceX96 = ethers.toBigInt(slot0[0]);

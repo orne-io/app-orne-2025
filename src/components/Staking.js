@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { CONFIG } from '../config/config';
 import {
   encodeUint256,
-  encodeAddress,
   getMethodSignature,
   sendTransaction,
   waitForTransaction,

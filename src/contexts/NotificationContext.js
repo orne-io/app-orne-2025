@@ -45,6 +45,10 @@ export const NotificationProvider = ({ children }) => {
     showNotification(message, 'info', duration);
   }, [showNotification]);
 
+  const addNotification = useCallback((notification) => {
+    setNotifications((prev) => [...prev, notification]);
+  }, [removeNotification]);
+
   const value = {
     notifications,
     showNotification,

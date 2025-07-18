@@ -9,8 +9,6 @@ import distributedOrneIcon from '../images/distributed-orne.png';
 import userStakingIcon from '../images/user-staking.png';
 
 const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles }) => {
-  const [stakingPeriod, setStakingPeriod] = useState('1m');
-  const [co2Period, setCO2Period] = useState('1m');
   const [stakingHistory, setStakingHistory] = useState([]);
   const [co2History, setCO2History] = useState([]);
 
@@ -22,38 +20,40 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
   const price = uniswapData?.price ? parseFloat(uniswapData.price) : 0;
   const priceUSD = price > 0 && wethPrice.usd ? price * wethPrice.usd : 0;
 
-  // Calculate market cap
+  // Restaurer le calcul du market cap et du circulating supply
   const circulatingSupply = 100000000 - parseFloat(globalStats.totalStaked) - parseFloat(globalStats.adminBalance || 0);
   const marketCap = priceUSD > 0 ? circulatingSupply * priceUSD : null;
   const totalMarketCap = priceUSD > 0 ? 100000000 * priceUSD : null;
 
   // Calculate total CO2 offset
   const totalCO2Offset = (() => {
-    if (window.orneGlobalStatsV5?.totalCO2OffsetKg !== undefined) {
-      return window.orneGlobalStatsV5.totalCO2OffsetKg.toFixed(3);
+    if (window.orneGlobalStatsV5?.totalCO2OffsetT !== undefined) {
+      return window.orneGlobalStatsV5.totalCO2OffsetT.toFixed(3);
     }
-    const totalStakedNumber = parseFloat(globalStats.totalStaked);
-    const co2PerOrneNumber = parseFloat(globalStats.co2PerOrne.replace(/,/g, '')) || 0;
-    if (totalStakedNumber === 0 || co2PerOrneNumber === 0) return 0;
-    const totalCO2Grams = totalStakedNumber * co2PerOrneNumber;
-    return (totalCO2Grams / 1000).toFixed(3);
+    return 0;
   })();
 
   useEffect(() => {
+    function fetchData() {
     fetch('/api/history-staked')
       .then(res => res.json())
-      .then(data => setStakingHistory(data))
+        .then(data => {
+          const sortedData = data.sort((a, b) => {
+            const dateA = new Date(a.fullDate || a.date);
+            const dateB = new Date(b.fullDate || b.date);
+            return dateA - dateB;
+          });
+          setStakingHistory(sortedData);
+        })
       .catch(() => setStakingHistory([]));
     fetch('/api/history-co2')
       .then(res => res.json())
       .then(data => {
-        // Trier les données par date (du plus ancien au plus récent)
         const sortedData = data.sort((a, b) => {
           const dateA = new Date(a.fullDate || a.date);
           const dateB = new Date(b.fullDate || b.date);
           return dateA - dateB;
         });
-        
         let total = 0;
         const cumu = sortedData.map(entry => {
           total += Number(entry.tonnes);
@@ -66,7 +66,36 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
         setCO2History(cumu);
       })
       .catch(() => setCO2History([]));
+    }
+    fetchData(); // initial fetch
+    const interval = setInterval(fetchData, 60000); // 1 minute
+    return () => clearInterval(interval);
   }, []);
+
+  // Helper pour forcer l'affichage des 10 derniers points si le filtre de période retourne trop peu de points
+  function getChartDataWithFallback(data, period) {
+    // Filtrage comme dans SimpleChart
+    const now = new Date();
+    let fromDate;
+    switch (period) {
+      case '1d': fromDate = new Date(now.getTime() - 24 * 60 * 60 * 1000); break;
+      case '1w': fromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); break;
+      case '1m': fromDate = new Date(now.setMonth(now.getMonth() - 1)); break;
+      case '3m': fromDate = new Date(now.setMonth(now.getMonth() - 3)); break;
+      case '6m': fromDate = new Date(now.setMonth(now.getMonth() - 6)); break;
+      case '1y': fromDate = new Date(now.setFullYear(now.getFullYear() - 1)); break;
+      default: return data;
+    }
+    const filtered = data.filter(d => {
+      const dateStr = d.fullDate || d.date;
+      if (!dateStr) return true;
+      const date = new Date(dateStr);
+      return date >= fromDate;
+    });
+    if (filtered.length >= 10) return filtered;
+    // Sinon, on prend les 10 derniers points disponibles
+    return data.slice(-10);
+  }
 
   // Bloc stat moderne avec bordure verticale
   const StatBlock = ({ color, title, value, tooltip }) => (
@@ -113,6 +142,12 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
       ))}
     </div>
   );
+
+  // --- LOG POUR DEBUG DES CHARTS ---
+  const stakingDataSorted = [...stakingHistory].sort((a, b) => new Date(a.fullDate || a.date) - new Date(b.fullDate || b.date));
+  const stakingChartData = stakingDataSorted.length > 10 ? stakingDataSorted.slice(-10) : stakingDataSorted;
+  const co2DataSorted = [...co2History].sort((a, b) => new Date(a.fullDate || a.date) - new Date(b.fullDate || b.date));
+  const co2ChartData = co2DataSorted.length > 10 ? co2DataSorted.slice(-10) : co2DataSorted;
 
   return (
     <>
@@ -193,19 +228,14 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
               tooltip="Total amount of $ORNE tokens currently in the unstaking process (pending withdrawal)."
             />
               </div>
-          <div className="PeriodSelector">
-            <PeriodSelector period={stakingPeriod} setPeriod={setStakingPeriod} color="#89be83" />
-          </div>
+          {/* PeriodSelector supprimé ici */}
         </div>
         <SimpleChart
-          data={stakingHistory}
+          data={stakingChartData}
           color="#89be83"
           dataKey="totalStaked"
           yLabel="Staked $ORNE"
-          period={stakingPeriod}
-          setPeriod={setStakingPeriod}
           gradientId="stakingGradient"
-          renderPeriodSelector={null}
         />
               </div>
 
@@ -216,29 +246,24 @@ const Dashboard = ({ dashboardData, globalStats, globalUnstakingStats, styles })
             <StatBlock
               color="#28a745"
               title="Total CO2 Offset"
-              value={totalCO2Offset + ' kg'}
-              tooltip="Total kilograms of CO2 offset by all staked $ORNE tokens."
+              value={totalCO2Offset + ' t'}
+              tooltip="Total tonnes of CO2 offset by all staked $ORNE tokens."
             />
             <StatBlock
               color="#28a745"
               title="CO2 per $ORNE"
-              value={globalStats.co2PerOrne + ' g'}
+              value={Number(globalStats.co2PerOrne).toFixed(2) + ' g'}
               tooltip="Current amount of CO2 (in grams) offset per staked $ORNE token."
             />
-              </div>
-          <div className="PeriodSelector">
-            <PeriodSelector period={co2Period} setPeriod={setCO2Period} color="#28a745" />
           </div>
+          {/* PeriodSelector supprimé ici */}
         </div>
         <SimpleChart
-          data={co2History}
+          data={co2ChartData}
           color="#28a745"
           dataKey="totalCO2"
           yLabel="CO2 offset (tons)"
-          period={co2Period}
-          setPeriod={setCO2Period}
           gradientId="co2Gradient"
-          renderPeriodSelector={null}
         />
       </div>
     </>

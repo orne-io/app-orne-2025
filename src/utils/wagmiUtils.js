@@ -1,6 +1,6 @@
 /* global BigInt */
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { parseEther, formatEther, toBigInt, Interface } from 'ethers';
+import { formatEther, toBigInt, Interface } from 'ethers';
 
 // ERC20 Interface for proper encoding
 const ERC20_ABI = [

@@ -140,8 +140,8 @@ const Footer = () => {
                     src={link.icon} 
                     alt={link.name}
                     style={{ 
-                      width: '24px', 
-                      height: '24px',
+                      width: '20px', 
+                      height: '20px',
                       objectFit: 'contain',
                       pointerEvents: 'none'
                     }}
@@ -151,8 +151,8 @@ const Footer = () => {
                     src={link.icon} 
                     alt={link.name}
                     style={{ 
-                      width: '24px', 
-                      height: '24px',
+                      width: '36px', 
+                      height: '36px',
                       filter: 'brightness(0) saturate(100%) invert(85%) sepia(15%) saturate(638%) hue-rotate(67deg) brightness(95%) contrast(87%)',
                       pointerEvents: 'none'
                     }}

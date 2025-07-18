@@ -26,17 +26,7 @@ const factoryInterface = new Interface(UNISWAP_V3_FACTORY_ABI);
 const calculateAmountOut = (amountIn, sqrtPriceX96, isToken0ToToken1, decimalsIn = 18, decimalsOut = 18) => {
   const Q96 = BigInt(2) ** BigInt(96);
   const sqrtPrice = BigInt(sqrtPriceX96);
-  
-  console.log('calculateAmountOut debug:', {
-    amountIn: amountIn.toString(),
-    sqrtPriceX96: sqrtPriceX96.toString(),
-    isToken0ToToken1,
-    decimalsIn,
-    decimalsOut,
-    Q96: Q96.toString(),
-    sqrtPrice: sqrtPrice.toString()
-  });
-  
+
   if (isToken0ToToken1) {
     // token0 -> token1: amountOut = amountIn * price
     // For Uniswap V3: price = (sqrtPriceX96 / 2^96)^2
@@ -44,13 +34,7 @@ const calculateAmountOut = (amountIn, sqrtPriceX96, isToken0ToToken1, decimalsIn
     const priceNumerator = sqrtPrice * sqrtPrice;
     const priceDenominator = Q96 * Q96;
     const amountOut = (BigInt(amountIn) * priceNumerator) / priceDenominator;
-    
-    console.log('Token0 -> Token1 calculation:', {
-      priceNumerator: priceNumerator.toString(),
-      priceDenominator: priceDenominator.toString(),
-      amountOut: amountOut.toString()
-    });
-    
+
     return amountOut;
   } else {
     // token1 -> token0: amountOut = amountIn / price
@@ -58,13 +42,7 @@ const calculateAmountOut = (amountIn, sqrtPriceX96, isToken0ToToken1, decimalsIn
     const priceNumerator = sqrtPrice * sqrtPrice;
     const priceDenominator = Q96 * Q96;
     const amountOut = (BigInt(amountIn) * priceDenominator) / priceNumerator;
-    
-    console.log('Token1 -> Token0 calculation:', {
-      priceNumerator: priceNumerator.toString(),
-      priceDenominator: priceDenominator.toString(),
-      amountOut: amountOut.toString()
-    });
-    
+
     return amountOut;
   }
 };
@@ -73,7 +51,7 @@ const calculateAmountOut = (amountIn, sqrtPriceX96, isToken0ToToken1, decimalsIn
 export const getPoolAddress = async (tokenA, tokenB, fee = POOL_FEE) => {
   try {
     if (!window.ethereum) throw new Error('MetaMask not available');
-    
+
     const data = factoryInterface.encodeFunctionData('getPool', [tokenA, tokenB, fee]);
     const result = await window.ethereum.request({
       method: 'eth_call',
@@ -82,7 +60,7 @@ export const getPoolAddress = async (tokenA, tokenB, fee = POOL_FEE) => {
         data: data
       }, 'latest']
     });
-    
+
     const poolAddress = factoryInterface.decodeFunctionResult('getPool', result)[0];
     return poolAddress;
   } catch (error) {
@@ -95,7 +73,7 @@ export const getPoolAddress = async (tokenA, tokenB, fee = POOL_FEE) => {
 export const getPoolData = async (poolAddress) => {
   try {
     if (!window.ethereum) throw new Error('MetaMask not available');
-    
+
     // Get slot0 data (contains sqrt price)
     const slot0Data = poolInterface.encodeFunctionData('slot0');
     const slot0Result = await window.ethereum.request({
@@ -105,10 +83,10 @@ export const getPoolData = async (poolAddress) => {
         data: slot0Data
       }, 'latest']
     });
-    
+
     const slot0 = poolInterface.decodeFunctionResult('slot0', slot0Result);
     const sqrtPriceX96 = slot0[0];
-    
+
     // Get liquidity
     const liquidityData = poolInterface.encodeFunctionData('liquidity');
     const liquidityResult = await window.ethereum.request({
@@ -118,9 +96,9 @@ export const getPoolData = async (poolAddress) => {
         data: liquidityData
       }, 'latest']
     });
-    
+
     const liquidity = poolInterface.decodeFunctionResult('liquidity', liquidityResult)[0];
-    
+
     // Get token addresses
     const token0Data = poolInterface.encodeFunctionData('token0');
     const token0Result = await window.ethereum.request({
@@ -130,9 +108,9 @@ export const getPoolData = async (poolAddress) => {
         data: token0Data
       }, 'latest']
     });
-    
+
     const token0 = poolInterface.decodeFunctionResult('token0', token0Result)[0];
-    
+
     const token1Data = poolInterface.encodeFunctionData('token1');
     const token1Result = await window.ethereum.request({
       method: 'eth_call',
@@ -141,9 +119,9 @@ export const getPoolData = async (poolAddress) => {
         data: token1Data
       }, 'latest']
     });
-    
+
     const token1 = poolInterface.decodeFunctionResult('token1', token1Result)[0];
-    
+
     return {
       sqrtPriceX96: sqrtPriceX96.toString(),
       liquidity: liquidity.toString(),
@@ -162,49 +140,30 @@ const calculateAmountOutWithLiquidity = (amountIn, sqrtPriceX96, liquidity, isTo
   const Q96 = BigInt(2) ** BigInt(96);
   const sqrtPrice = BigInt(sqrtPriceX96);
   const L = BigInt(liquidity);
-  
-  console.log('calculateAmountOutWithLiquidity debug:', {
-    amountIn: amountIn.toString(),
-    sqrtPriceX96: sqrtPriceX96.toString(),
-    liquidity: liquidity.toString(),
-    isToken0ToToken1,
-    Q96: Q96.toString(),
-    sqrtPrice: sqrtPrice.toString(),
-    L: L.toString()
-  });
-  
+
   if (isToken0ToToken1) {
     // token0 -> token1: WETH -> ORNE
     // Calculate price
     const priceNumerator = sqrtPrice * sqrtPrice;
     const priceDenominator = Q96 * Q96;
     const price = (priceNumerator * (BigInt(10) ** BigInt(18))) / priceDenominator;
-    
+
     // Calculate theoretical amount out
     const theoreticalAmountOut = (BigInt(amountIn) * price) / (BigInt(10) ** BigInt(18));
-    
+
     // Apply fee
     const feeAmount = theoreticalAmountOut * BigInt(3) / BigInt(1000); // 0.3% fee
     let finalAmountOut = theoreticalAmountOut - feeAmount;
-    
+
     // Check if we're trying to swap more than available liquidity
     // For WETH -> ORNE, we need to check ORNE liquidity
     // The liquidity is in terms of the pool's base units, so we need to convert
     const maxOrneAvailable = L * BigInt(2); // Approximate max ORNE available
-    
+
     if (finalAmountOut > maxOrneAvailable) {
-      console.log('Amount out exceeds available liquidity, capping at max available');
       finalAmountOut = maxOrneAvailable;
     }
-    
-    console.log('Token0 -> Token1 calculation with liquidity check:', {
-      price: price.toString(),
-      theoreticalAmountOut: theoreticalAmountOut.toString(),
-      feeAmount: feeAmount.toString(),
-      finalAmountOut: finalAmountOut.toString(),
-      maxOrneAvailable: maxOrneAvailable.toString()
-    });
-    
+
     return finalAmountOut;
   } else {
     // token1 -> token0: ORNE -> WETH
@@ -212,31 +171,22 @@ const calculateAmountOutWithLiquidity = (amountIn, sqrtPriceX96, liquidity, isTo
     const priceNumerator = sqrtPrice * sqrtPrice;
     const priceDenominator = Q96 * Q96;
     const price = (priceNumerator * (BigInt(10) ** BigInt(18))) / priceDenominator;
-    
+
     // Calculate theoretical amount out
     const theoreticalAmountOut = (BigInt(amountIn) * (BigInt(10) ** BigInt(18))) / price;
-    
+
     // Apply fee
     const feeAmount = theoreticalAmountOut * BigInt(3) / BigInt(1000); // 0.3% fee
     let finalAmountOut = theoreticalAmountOut - feeAmount;
-    
+
     // Check if we're trying to swap more than available liquidity
     // For ORNE -> WETH, we need to check WETH liquidity
     const maxWethAvailable = L * BigInt(2) / (BigInt(10) ** BigInt(18)); // Approximate max WETH available
-    
+
     if (finalAmountOut > maxWethAvailable) {
-      console.log('Amount out exceeds available liquidity, capping at max available');
       finalAmountOut = maxWethAvailable;
     }
-    
-    console.log('Token1 -> Token0 calculation with liquidity check:', {
-      price: price.toString(),
-      theoreticalAmountOut: theoreticalAmountOut.toString(),
-      feeAmount: feeAmount.toString(),
-      finalAmountOut: finalAmountOut.toString(),
-      maxWethAvailable: maxWethAvailable.toString()
-    });
-    
+
     return finalAmountOut;
   }
 };
@@ -249,44 +199,27 @@ export const getAccurateSwapQuote = async (tokenIn, tokenOut, amountIn, fee = PO
     if (!poolAddress || poolAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error('Pool not found');
     }
-    
+
     // Get pool data
     const poolData = await getPoolData(poolAddress);
     if (!poolData) {
       throw new Error('Failed to get pool data');
     }
-    
+
     // Determine token order
     const isToken0ToToken1 = tokenIn.toLowerCase() === poolData.token0.toLowerCase();
-    
-    console.log('Pool data for quote:', {
-      poolAddress,
-      tokenIn: tokenIn.toLowerCase(),
-      tokenOut: tokenOut.toLowerCase(),
-      poolToken0: poolData.token0.toLowerCase(),
-      poolToken1: poolData.token1.toLowerCase(),
-      isToken0ToToken1,
-      sqrtPriceX96: poolData.sqrtPriceX96
-    });
-    
+
     // Calculate amount out
     const amountOut = calculateAmountOut(
       amountIn,
       poolData.sqrtPriceX96,
       isToken0ToToken1
     );
-    
+
     // Apply slippage
     const slippageMultiplier = BigInt(Math.floor((100 - slippagePercent) * 1000));
     const amountOutMinimum = amountOut * slippageMultiplier / BigInt(100000);
-    
-    console.log('Accurate quote slippage calculation:', {
-      slippagePercent,
-      slippageMultiplier: slippageMultiplier.toString(),
-      amountOut: amountOut.toString(),
-      amountOutMinimum: amountOutMinimum.toString()
-    });
-    
+
     return {
       amountOut: amountOut.toString(),
       amountOutMinimum: amountOutMinimum.toString(),
@@ -307,40 +240,28 @@ const getCurrentPriceFromPool = async (tokenIn, tokenOut, fee = POOL_FEE) => {
     if (!poolAddress || poolAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error('Pool not found');
     }
-    
+
     const poolData = await getPoolData(poolAddress);
     if (!poolData) {
       throw new Error('Failed to get pool data');
     }
-    
+
     // Calculate current price from sqrt price using correct Uniswap V3 formula
     const Q96 = BigInt(2) ** BigInt(96);
     const sqrtPrice = BigInt(poolData.sqrtPriceX96);
-    
+
     // Calculate price: price = (sqrtPriceX96 / 2^96)^2
     // This gives us the price of token1 in terms of token0
     // But we need to handle the scaling properly for 18 decimals
     const priceNumerator = sqrtPrice * sqrtPrice;
     const priceDenominator = Q96 * Q96;
-    
+
     // The price is in terms of token1/token0, but we need to scale it properly
     // For 18 decimal tokens, we need to multiply by 10^18 to get the proper price
     const price = (priceNumerator * (BigInt(10) ** BigInt(18))) / priceDenominator;
-    
+
     const isToken0ToToken1 = tokenIn.toLowerCase() === poolData.token0.toLowerCase();
-    
-    console.log('Current pool price (corrected):', {
-      sqrtPriceX96: poolData.sqrtPriceX96,
-      priceNumerator: priceNumerator.toString(),
-      priceDenominator: priceDenominator.toString(),
-      price: price.toString(),
-      isToken0ToToken1,
-      Q96: Q96.toString(),
-      sqrtPrice: sqrtPrice.toString(),
-      priceInHuman: (Number(price) / 1e18).toFixed(6),
-      sqrtPriceInHuman: (Number(sqrtPrice) / Number(Q96)).toFixed(6)
-    });
-    
+
     return { price: price.toString(), isToken0ToToken1 };
   } catch (error) {
     console.error('Error getting current price from pool:', error);
@@ -355,39 +276,22 @@ export const getSimpleSwapQuote = async (tokenIn, tokenOut, amountIn, slippagePe
   const tokenOutLower = tokenOut.toLowerCase();
   const wethLower = WETH_ADDRESS.toLowerCase();
   const orneLower = ORNE_TOKEN_ADDRESS.toLowerCase();
-  
-  // Debug logs
-  console.log('Swap Quote Debug:', {
-    tokenIn: tokenInLower,
-    tokenOut: tokenOutLower,
-    wethAddress: wethLower,
-    orneAddress: orneLower,
-    amountIn: amountIn
-  });
-  
+
   // Try to get dynamic price from pool first
   try {
     const poolAddress = await getPoolAddress(tokenIn, tokenOut);
     if (!poolAddress || poolAddress === '0x0000000000000000000000000000000000000000') {
       throw new Error('Pool not found');
     }
-    
+
     const poolData = await getPoolData(poolAddress);
     if (!poolData) {
       throw new Error('Failed to get pool data');
     }
-    
-    console.log('Pool data for quote:', {
-      poolAddress,
-      liquidity: poolData.liquidity,
-      sqrtPriceX96: poolData.sqrtPriceX96,
-      token0: poolData.token0,
-      token1: poolData.token1
-    });
-    
+
     // Determine token order
     const isToken0ToToken1 = tokenInLower === poolData.token0.toLowerCase();
-    
+
     // Calculate amount out using liquidity
     const amountOut = calculateAmountOutWithLiquidity(
       amountIn,
@@ -395,27 +299,16 @@ export const getSimpleSwapQuote = async (tokenIn, tokenOut, amountIn, slippagePe
       poolData.liquidity,
       isToken0ToToken1
     );
-    
-    console.log('Dynamic price calculation result with liquidity:', { 
-      amountOut: amountOut.toString(),
-      liquidity: poolData.liquidity
-    });
-    
+
     // Calculate slippage
     const slippageMultiplier = BigInt(Math.floor((100 - slippagePercent) * 1000));
     const amountOutMinimum = amountOut * slippageMultiplier / BigInt(100000);
-    
+
     // Calculate price impact (simplified)
     const amountInEther = Number(amountIn) / 1e18;
     const amountOutEther = Number(amountOut) / 1e18;
     const priceImpact = amountInEther > 0 ? Math.abs((amountOutEther / amountInEther - 1) * 100) : 0;
-    
-    console.log('Price impact calculation:', {
-      amountInEther,
-      amountOutEther,
-      priceImpact: priceImpact.toFixed(2) + '%'
-    });
-    
+
     return {
       amountOut: amountOut.toString(),
       amountOutMinimum: amountOutMinimum.toString(),
@@ -425,49 +318,34 @@ export const getSimpleSwapQuote = async (tokenIn, tokenOut, amountIn, slippagePe
   } catch (error) {
     console.error('Failed to get dynamic price, falling back to fixed price:', error);
   }
-  
+
   // Fallback to fixed price if dynamic price fails
-  console.log('Using fixed price calculation as fallback');
   const isWETHToORNE = tokenInLower === wethLower && tokenOutLower === orneLower;
   const isORNEToWETH = tokenInLower === orneLower && tokenOutLower === wethLower;
-  
+
   let amountOut;
   if (isWETHToORNE) {
     // 1 WETH = 295,900 ORNE (fixed price for now)
     // Convert to wei: 295,900 * 10^18
     amountOut = BigInt(amountIn) * BigInt(295900) * (BigInt(10) ** BigInt(18)) / (BigInt(10) ** BigInt(18));
-    console.log('Using fixed WETH -> ORNE calculation:', { amountIn, amountOut: amountOut.toString() });
   } else if (isORNEToWETH) {
     // 295,900 ORNE = 1 WETH (fixed price for now)
     // Convert to wei: amountIn / 295,900 * 10^18
     amountOut = BigInt(amountIn) * (BigInt(10) ** BigInt(18)) / (BigInt(295900) * (BigInt(10) ** BigInt(18)));
-    console.log('Using fixed ORNE -> WETH calculation:', { amountIn, amountOut: amountOut.toString() });
   } else {
     // Fallback pour d'autres cas
     console.warn('Unknown token pair, using 1:1 fallback');
     amountOut = BigInt(amountIn);
   }
-  
+
   // Apply 0.3% fee
   const feeAmount = amountOut * BigInt(3) / BigInt(1000);
   amountOut = amountOut - feeAmount;
-  
-  console.log('After fee calculation:', { 
-    originalAmountOut: amountOut.toString(),
-    feeAmount: feeAmount.toString(),
-    amountOutAfterFee: amountOut.toString()
-  });
-  
+
   // Calculate slippage: for 0.5% slippage, we want 99.5% of the amount
   const slippageMultiplier = BigInt(Math.floor((100 - slippagePercent) * 1000));
   const amountOutMinimum = amountOut * slippageMultiplier / BigInt(100000);
-  
-  console.log('Slippage calculation:', {
-    slippagePercent,
-    slippageMultiplier: slippageMultiplier.toString(),
-    amountOutMinimum: amountOutMinimum.toString()
-  });
-  
+
   return {
     amountOut: amountOut.toString(),
     amountOutMinimum: amountOutMinimum.toString(),

@@ -184,11 +184,11 @@ const AdminPanel = ({
           </div>
           <div style={styles.userStatCard}>
             <h4 style={styles.userStatTitle}>CO2 per $ORNE</h4>
-            <p style={styles.userStatValue}>{String(globalStats.co2PerOrne).replace(/,/g, '')} g</p>
+            <p style={styles.userStatValue}>{Number(globalStats.co2PerOrne).toFixed(2)} g</p>
           </div>
           <div style={styles.userStatCard}>
             <h4 style={styles.userStatTitle}>Total CO2</h4>
-            <p style={styles.userStatValue}>{dashboardData.totalCO2Offset} kg</p>
+            <p style={styles.userStatValue}>{dashboardData.totalCO2Offset} t</p>
           </div>
           <div style={styles.userStatCard}>
             <h4 style={styles.userStatTitle}>Stakers</h4>

@@ -10,7 +10,7 @@ import { useWethPrice } from '../hooks/useWethPrice';
 
 const CustomSwapWidget = () => {
   const { address, isConnected } = useAccount();
-  const { notifications, showSuccess, showError, showWarning, removeNotification } = useNotificationContext();
+  const { showSuccess, showError, showWarning } = useNotificationContext();
   const { executeSwap, waitForSwapTransaction } = useSwapOperations();
   const poolData = useUniswapV3PoolData();
   const wethPrice = useWethPrice();
@@ -83,21 +83,7 @@ const CustomSwapWidget = () => {
   const [showSlippageSettings, setShowSlippageSettings] = useState(false);
   const [customSlippage, setCustomSlippage] = useState('2.0');
 
-  // Debug logging
-  useEffect(() => {
-    console.log('CustomSwapWidget debug:', {
-      address,
-      isConnected,
-      wethBalance: wethBalance?.data,
-      orneBalance: orneBalance?.data,
-      wethAllowance: wethAllowance?.data,
-      orneAllowance: orneAllowance?.data,
-      wethBalanceError: wethBalance?.error,
-      orneBalanceError: orneBalance?.error,
-      wethAllowanceError: wethAllowance?.error,
-      orneAllowanceError: orneAllowance?.error
-    });
-  }, [address, isConnected, wethBalance, orneBalance, wethAllowance, orneAllowance]);
+
 
   // Get quote when inputs change
   useEffect(() => {

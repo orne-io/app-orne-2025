@@ -3,6 +3,8 @@ const cors = require('cors');
 const { ethers } = require('ethers');
 require('dotenv').config();
 const axios = require('axios');
+const Database = require('better-sqlite3');
+const SQLITE_PATH = './events.sqlite';
 
 const app = express();
 app.use(cors());
@@ -29,108 +31,146 @@ const RPC_URL = "https://arb-mainnet.g.alchemy.com/v2/-ofb30ntFCdQjf6j0VbjwHdTu7
 const provider = new ethers.JsonRpcProvider(RPC_URL);
 const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
 
+// === GLOBAL STATS FROM SQLITE ===
+
 // Total staké (en ORNE)
 app.get('/api/global-staked', async (req, res) => {
   try {
-    const value = await contract.totalStaked();
-    res.json({ totalStaked: ethers.formatUnits(value, 18) });
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    const events = db.prepare(`SELECT eventType, amount FROM events WHERE eventType IN ('Staked', 'UnstakeRequested')`).all();
+    let total = 0;
+    for (const ev of events) {
+      const amount = parseFloat(ev.amount) / 1e18;
+      if (ev.eventType === 'Staked') total += amount;
+      else if (ev.eventType === 'UnstakeRequested') total -= amount;
+    }
+    db.close();
+    res.json({ totalStaked: total });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
+    res.status(500).json({ error: 'Erreur global-staked (sqlite)' });
   }
 });
 
-// Nombre de détenteurs uniques (via Arbiscan)
-app.get('/api/global-holders', async (req, res) => {
-  try {
-    const tokenAddress = ORNE_TOKEN_ADDRESS;
-    const apiKey = process.env.ARBISCAN_API_KEY;
-    // Use Arbiscan mainnet API
-    const url = `https://api.arbiscan.io/api?module=account&action=tokentx&contractaddress=${tokenAddress}&page=1&offset=1000&sort=desc&apikey=${apiKey}`;
-    const response = await axios.get(url);
-	console.log('Arbiscan tokentx response:', response.data);
-    const txs = response.data.result;
-	if (!Array.isArray(txs)) {
-	  console.error('Arbiscan tokentx result is not an array:', response.data);
-	  return res.json({ uniqueHolders: 0 });
-	}
-	// Compte les adresses uniques destinataires
-	const holders = new Set();
-	txs.forEach(tx => {
-	  holders.add(tx.to.toLowerCase());
-	});
-	res.json({ uniqueHolders: holders.size });
-  } catch (err) {
-  console.error('Arbiscan API error:', err.response ? err.response.data : err.message);
-  res.status(500).json({ error: 'Arbiscan API error' });
-}
-});
-
-// Nombre de stakers uniques
-app.get('/api/global-stakers', async (req, res) => {
-  try {
-    const value = await contract.getUniqueStakersCount();
-    res.json({ uniqueStakers: Number(value) });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
-  }
-});
-
-// Total CO2 offset (en kg)
-app.get('/api/global-co2', async (req, res) => {
-  try {
-    const value = await contract.getTotalCO2Offset();
-    // Conversion en kg
-    const valueKg = Number(value.toString()) / 1000;
-    res.json({ totalCO2OffsetKg: valueKg });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
-  }
-});
-
-// CO2 par ORNE (en grammes)
-app.get('/api/global-co2-per-orne', async (req, res) => {
-  try {
-    const value = await contract.co2PerOrne();
-    res.json({ co2PerOrne: Number(value) });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
-  }
-});
-
-// Unstaking global (en ORNE)
+// Total en cours d'unstaking (en ORNE)
 app.get('/api/global-unstaking', async (req, res) => {
   try {
-    const value = await contract.getTotalPendingUnstakes();
-    res.json({ totalPendingUnstakes: ethers.formatUnits(value, 18) });
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On considère les UnstakeRequested non encore "Unstaked"
+    const requests = db.prepare(`SELECT user, amount, blockNumber FROM events WHERE eventType = 'UnstakeRequested'`).all();
+    const unstaked = db.prepare(`SELECT user, amount, blockNumber FROM events WHERE eventType = 'Unstaked'`).all();
+    // On fait le solde par user
+    const pending = {};
+    for (const req of requests) {
+      const key = req.user + '-' + req.amount;
+      pending[key] = (pending[key] || 0) + parseFloat(req.amount) / 1e18;
+    }
+    for (const u of unstaked) {
+      const key = u.user + '-' + u.amount;
+      if (pending[key]) pending[key] -= parseFloat(u.amount) / 1e18;
+    }
+    const total = Object.values(pending).reduce((a, b) => a + (b > 0 ? b : 0), 0);
+    db.close();
+    res.json({ totalPendingUnstakes: total });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
+    res.status(500).json({ error: 'Erreur global-unstaking (sqlite)' });
   }
 });
 
 // Total des ORNE distribués (rewards)
 app.get('/api/global-rewards-distributed', async (req, res) => {
   try {
-    const ABI = [
-      "function totalRewardsDeposited() view returns (uint256)"
-    ];
-    const rewardsContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    const value = await rewardsContract.totalRewardsDeposited();
-    res.json({ totalRewardsDistributed: ethers.formatUnits(value, 18) });
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    const events = db.prepare(`SELECT amount FROM events WHERE eventType = 'RewardsDeposited'`).all();
+    let total = 0;
+    for (const ev of events) {
+      total += parseFloat(ev.amount) / 1e18;
+    }
+    db.close();
+    res.json({ totalRewardsDistributed: total });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Blockchain read error' });
+    res.status(500).json({ error: 'Erreur global-rewards-distributed (sqlite)' });
+  }
+});
+
+// Total CO2 offset (en tonnes)
+app.get('/api/global-co2', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    const events = db.prepare(`SELECT amount FROM events WHERE eventType = 'CO2Updated'`).all();
+    let total = 0;
+    for (const ev of events) {
+      total += parseFloat(ev.amount);
+    }
+    db.close();
+    res.json({ totalCO2OffsetT: total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur global-co2 (sqlite)' });
+  }
+});
+
+// Nombre de détenteurs uniques (approximatif)
+app.get('/api/global-holders', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On considère tous les users ayant au moins un event Staked ou Unstaked
+    const users = db.prepare(`SELECT DISTINCT user FROM events WHERE user IS NOT NULL AND user != ''`).all();
+    db.close();
+    res.json({ uniqueHolders: users.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur global-holders (sqlite)' });
+  }
+});
+
+// Nombre de stakers uniques (approximatif)
+app.get('/api/global-stakers', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On considère tous les users ayant au moins un event Staked
+    const users = db.prepare(`SELECT DISTINCT user FROM events WHERE eventType = 'Staked' AND user IS NOT NULL AND user != ''`).all();
+    db.close();
+    res.json({ uniqueStakers: users.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur global-stakers (sqlite)' });
+  }
+});
+
+// CO2 par ORNE (en grammes)
+app.get('/api/global-co2-per-orne', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // Total CO2 (en grammes)
+    const co2Events = db.prepare(`SELECT amount FROM events WHERE eventType = 'CO2Updated'`).all();
+    let totalCO2 = 0;
+    for (const ev of co2Events) {
+      totalCO2 += parseFloat(ev.amount) * 1000; // Convertir tonnes -> grammes
+    }
+    // Total staké (en ORNE)
+    const events = db.prepare(`SELECT eventType, amount FROM events WHERE eventType IN ('Staked', 'UnstakeRequested')`).all();
+    let totalStaked = 0;
+    for (const ev of events) {
+      const amount = parseFloat(ev.amount) / 1e18;
+      if (ev.eventType === 'Staked') totalStaked += amount;
+      else if (ev.eventType === 'UnstakeRequested') totalStaked -= amount;
+    }
+    db.close();
+    let co2PerOrne = 0;
+    if (totalStaked > 0) co2PerOrne = totalCO2 / totalStaked;
+    res.json({ co2PerOrne });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur global-co2-per-orne (sqlite)' });
   }
 });
 
 // Balance du wallet admin (pour calculer le circulating supply)
 app.get('/api/admin-balance', async (req, res) => {
   try {
-    // Use new admin address
     const ABI = [
       "function balanceOf(address) view returns (uint256)"
     ];
@@ -201,148 +241,190 @@ app.post('/api/set-unstaking-delay', async (req, res) => {
   }
 });
 
-// === HISTORIQUE CO2 ===
+// === HISTORIQUE CO2 (depuis SQLite) ===
 app.get('/api/history-co2', async (req, res) => {
   try {
-    const ABI = [
-      "event CO2Updated(uint256 addedTonnes, uint256 newCO2PerOrne)"
-    ];
-    const co2Contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    const events = await co2Contract.queryFilter("CO2Updated");
-    // Récupérer les timestamps des blocks
-    const history = await Promise.all(events.map(async (ev) => {
-      const block = await provider.getBlock(ev.blockNumber);
-      const date = new Date(block.timestamp * 1000);
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On récupère tous les events CO2Updated, triés par blockNumber
+    const events = db.prepare(`SELECT amount, blockNumber, txHash, timestamp, extra FROM events WHERE eventType = 'CO2Updated' ORDER BY blockNumber ASC`).all();
+    let total = 0;
+    const history = events.map(ev => {
+      total += parseFloat(ev.amount);
+      const date = new Date(ev.timestamp * 1000);
+      let newCO2PerOrne = null;
+      if (ev.extra) {
+        try {
+          const extra = JSON.parse(ev.extra);
+          newCO2PerOrne = extra.newCO2PerOrne;
+        } catch {}
+      }
       return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
         fullDate: date.toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-        tonnes: Number(ev.args.addedTonnes),
-        txHash: ev.transactionHash
+        tonnes: parseFloat(ev.amount),
+        txHash: ev.txHash,
+        newCO2PerOrne
       };
-    }));
-    res.json(history.reverse());
+    });
+    db.close();
+    res.json(history);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur historique CO2' });
+    res.status(500).json({ error: 'Erreur historique CO2 (sqlite)' });
   }
 });
 
 // === HISTORIQUE REWARDS ===
 app.get('/api/history-rewards', async (req, res) => {
   try {
-    const ABI = [
-      "event RewardsDeposited(uint256 amount)"
-    ];
-    const rewardsContract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    const events = await rewardsContract.queryFilter("RewardsDeposited");
-    const history = await Promise.all(events.map(async (ev) => {
-      const block = await provider.getBlock(ev.blockNumber);
-      const date = new Date(block.timestamp * 1000);
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On récupère tous les events RewardsDeposited, triés par blockNumber
+    const events = db.prepare(`SELECT amount, blockNumber, txHash, timestamp FROM events WHERE eventType = 'RewardsDeposited' ORDER BY blockNumber ASC`).all();
+    const history = events.map(ev => {
+      const date = new Date(ev.timestamp * 1000);
       return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
         fullDate: date.toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-        amount: Number(ethers.formatUnits(ev.args.amount, 18)),
-        txHash: ev.transactionHash
+        amount: parseFloat(ev.amount) / 1e18,
+        txHash: ev.txHash
       };
-    }));
-    res.json(history.reverse());
+    });
+    db.close();
+    res.json(history.reverse()); // du plus récent au plus ancien
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur historique rewards' });
+    res.status(500).json({ error: 'Erreur historique rewards (sqlite)' });
   }
 });
 
-// === HISTORIQUE STAKING ===
+// === HISTORIQUE STAKING GLOBAL (depuis SQLite) ===
 app.get('/api/history-staked', async (req, res) => {
   try {
-    const ABI = [
-      "event Staked(address indexed user, uint256 amount)",
-      "event UnstakeRequested(address indexed user, uint256 amount, uint256 unlockTime)"
-    ];
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    // Récupère tous les events Staked et UnstakeRequested
-    const stakedEvents = await contract.queryFilter("Staked");
-    const unstakeEvents = await contract.queryFilter("UnstakeRequested");
-    // Fusionne et trie les events par blockNumber
-    const allEvents = [...stakedEvents, ...unstakeEvents].sort((a, b) => a.blockNumber - b.blockNumber);
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On récupère tous les events Staked et UnstakeRequested, triés par blockNumber
+    const events = db.prepare(`SELECT eventType, amount, blockNumber, timestamp FROM events WHERE eventType IN ('Staked', 'UnstakeRequested') ORDER BY blockNumber ASC`).all();
     let totalStaked = 0;
     const history = [];
-    for (const ev of allEvents) {
-      const block = await provider.getBlock(ev.blockNumber);
-      const eventName = ev.event || ev.eventName || (ev.fragment && ev.fragment.name);
-      console.log('Event:', eventName, 'Amount:', ev.args.amount.toString(), 'Block:', ev.blockNumber);
-      console.log('Formatted:', ethers.formatUnits(ev.args.amount, 18));
-      if (eventName === "Staked") {
-        totalStaked += parseFloat(ethers.formatUnits(ev.args.amount, 18));
-      } else if (eventName === "UnstakeRequested") {
-        totalStaked -= parseFloat(ethers.formatUnits(ev.args.amount, 18));
-      }
-      const date = new Date(block.timestamp * 1000);
+    for (const ev of events) {
+      const amount = parseFloat(ev.amount) / 1e18;
+      if (ev.eventType === 'Staked') totalStaked += amount;
+      else if (ev.eventType === 'UnstakeRequested') totalStaked -= amount;
+      const date = new Date(ev.timestamp * 1000);
       history.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
         fullDate: date.toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-        totalStaked: Number(totalStaked.toFixed(4))
+        totalStaked: totalStaked
       });
     }
+    db.close();
     res.json(history);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur historique staking' });
+    res.status(500).json({ error: 'Erreur historique staking (sqlite)' });
   }
 });
 
-// === HISTORIQUE STAKING PAR UTILISATEUR ===
+// === HISTORIQUE STAKING PAR UTILISATEUR (depuis SQLite) ===
 app.get('/api/history-staked/:address', async (req, res) => {
+  const userAddress = req.params.address.toLowerCase();
   try {
-    const userAddress = req.params.address.toLowerCase();
-    const ABI = [
-      "event Staked(address indexed user, uint256 amount)",
-      "event UnstakeRequested(address indexed user, uint256 amount, uint256 unlockTime)",
-      "event Unstaked(address indexed user, uint256 amount)",
-      "event RewardsClaimed(address indexed user, uint256 amount)"
-    ];
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
-    // Filtrer tous les events pour l'utilisateur
-    const stakedEvents = await contract.queryFilter(contract.filters.Staked(userAddress));
-    const unstakeRequestedEvents = await contract.queryFilter(contract.filters.UnstakeRequested(userAddress));
-    const unstakedEvents = await contract.queryFilter(contract.filters.Unstaked(userAddress));
-    const rewardsClaimedEvents = await contract.queryFilter(contract.filters.RewardsClaimed(userAddress));
-    
-    // Fusionner et trier par blockNumber
-    const allEvents = [...stakedEvents, ...unstakeRequestedEvents, ...unstakedEvents, ...rewardsClaimedEvents].sort((a, b) => a.blockNumber - b.blockNumber);
-    const history = await Promise.all(allEvents.map(async (ev) => {
-      const block = await provider.getBlock(ev.blockNumber);
-      const eventName = ev.event || ev.eventName || (ev.fragment && ev.fragment.name);
-      let amount = Number(ethers.formatUnits(ev.args.amount, 18));
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // On récupère tous les events de l'utilisateur, triés par blockNumber
+    const events = db.prepare(`SELECT eventType, amount, unlockTime, blockNumber, txHash, timestamp FROM events WHERE user = ? AND eventType IN ('Staked', 'UnstakeRequested', 'Unstaked', 'RewardsClaimed') ORDER BY blockNumber ASC`).all(userAddress);
+    const history = events.map(ev => {
+      let type = ev.eventType;
+      if (ev.eventType === 'Staked') type = 'Stake';
+      else if (ev.eventType === 'UnstakeRequested') type = 'Unstake Request';
+      else if (ev.eventType === 'Unstaked') type = 'Unstake Final';
+      else if (ev.eventType === 'RewardsClaimed') type = 'Claim Rewards';
       let unlockTime = null;
-      let type = eventName;
-      
-      // Mapper les types d'événements pour l'affichage
-      if (eventName === 'Staked') {
-        type = 'Stake';
-      } else if (eventName === 'UnstakeRequested') {
-        type = 'Unstake Request';
-        if (ev.args.unlockTime) {
-          unlockTime = new Date(Number(ev.args.unlockTime) * 1000).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-        }
-      } else if (eventName === 'Unstaked') {
-        type = 'Unstake Final';
-      } else if (eventName === 'RewardsClaimed') {
-        type = 'Claim Rewards';
+      if (ev.unlockTime) {
+        unlockTime = new Date(Number(ev.unlockTime) * 1000).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
       }
-      
       return {
+        date: ev.timestamp ? new Date(ev.timestamp * 1000).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '',
         type,
-        date: new Date(block.timestamp * 1000).toLocaleString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-        amount,
+        amount: parseFloat(ev.amount) / 1e18,
         unlockTime,
-        txHash: ev.transactionHash
+        txHash: ev.txHash
       };
-    }));
-    res.json(history.reverse());
+    });
+    db.close();
+    res.json(history);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Erreur historique staking utilisateur' });
+    res.status(500).json({ error: 'Erreur historique staking utilisateur (sqlite)' });
+  }
+});
+
+// === NEW HOLDERS ROUTE (FULL ERC20 + STAKING) ===
+app.get('/api/holders', async (req, res) => {
+  try {
+    const db = new Database(SQLITE_PATH, { readonly: true });
+    // 1. Get all addresses that ever received or sent ORNE
+    const allAddresses = db.prepare(`
+      SELECT address FROM (
+        SELECT DISTINCT "from" as address FROM erc20_transfers
+        UNION
+        SELECT DISTINCT "to" as address FROM erc20_transfers
+      )
+      WHERE address != '0x0000000000000000000000000000000000000000'
+    `).all().map(r => r.address.toLowerCase());
+
+    // 2. Build ERC20 balances
+    const balances = {};
+    for (const addr of allAddresses) {
+      let received = db.prepare('SELECT SUM(CAST(amount AS TEXT)) as total FROM erc20_transfers WHERE "to" = ?').get(addr).total;
+      let sent = db.prepare('SELECT SUM(CAST(amount AS TEXT)) as total FROM erc20_transfers WHERE "from" = ?').get(addr).total;
+      received = received === null ? '0' : received;
+      sent = sent === null ? '0' : sent;
+      try {
+        const totalHolding = (BigInt(received) - BigInt(sent)) / 10n**18n;
+        balances[addr] = { totalHolding: Number(totalHolding) };
+      } catch (e) {
+        throw e;
+      }
+    }
+
+    // 3. Build staking/unstaking per address
+    const events = db.prepare("SELECT eventType, user, amount FROM events WHERE user IS NOT NULL AND user != '' AND eventType IN ('Staked', 'UnstakeRequested', 'Unstaked')").all();
+    const staking = {};
+    for (const ev of events) {
+      const address = ev.user.toLowerCase();
+      if (!staking[address]) {
+        staking[address] = { totalStaking: 0, totalUnstaking: 0, totalUnstaked: 0 };
+      }
+      const amount = parseFloat(ev.amount) / 1e18;
+      if (ev.eventType === 'Staked') staking[address].totalStaking += amount;
+      else if (ev.eventType === 'UnstakeRequested') staking[address].totalUnstaking += amount;
+      else if (ev.eventType === 'Unstaked') staking[address].totalUnstaked += amount;
+    }
+
+    // 4. Merge and compute liquid
+    const result = allAddresses.map(addr => {
+      const totalHolding = balances[addr]?.totalHolding || 0;
+      const totalStaking = staking[addr]?.totalStaking || 0;
+      const totalUnstaking = staking[addr]?.totalUnstaking || 0;
+      const totalUnstaked = staking[addr]?.totalUnstaked || 0;
+      // Currently staked = staked - unstake requested - unstaked
+      const currentlyStaked = totalStaking - totalUnstaking - totalUnstaked;
+      // Unstaking in progress = totalUnstaking - totalUnstaked
+      const unstaking = totalUnstaking - totalUnstaked;
+      // Liquid = totalHolding - currentlyStaked - unstaking
+      const liquid = totalHolding - currentlyStaked - unstaking;
+      return {
+        address: addr,
+        totalHolding,
+        totalStaking: currentlyStaked > 0 ? currentlyStaked : 0,
+        totalUnstaking: unstaking > 0 ? unstaking : 0,
+        totalLiquid: liquid > 0 ? liquid : 0
+      };
+    }).filter(h => h.totalHolding > 0 || h.totalStaking > 0 || h.totalUnstaking > 0);
+
+    res.json(result);
+  } catch (err) {
+    console.error('Holders API error:', err);
+    res.status(500).json({ error: 'Error in holders (sqlite)' });
   }
 });
 

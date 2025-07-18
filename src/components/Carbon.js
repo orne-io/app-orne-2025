@@ -590,7 +590,7 @@ const Carbon = ({ userStats, globalStats, styles, dashboardData }) => {
                             <p>📊 Details:</p>
                             <ul>
                               <li>Staked: {parseFloat(userStats.stakedBalance).toFixed(2)} $ORNE</li>
-                              <li>CO2 per $ORNE: {parseFloat(String(globalStats.co2PerOrne).replace(/,/g, '')).toLocaleString()} g</li>
+                              <li>CO2 per $ORNE: {Number(globalStats.co2PerOrne).toFixed(2)} g</li>
                               <li>Total offset: {orneOffset.toFixed(3)} kg</li>
                             </ul>
                           </div>
@@ -630,13 +630,22 @@ const Carbon = ({ userStats, globalStats, styles, dashboardData }) => {
             <img src={totalCo2Icon} alt="Total CO2" style={{ width: 50, height: 50 }} />
           </div>
           <div className="stat-label">Total CO2
-            <InfoTooltip title="Total CO2" content="Total kilograms of CO2 offset by all staked $ORNE tokens.">
+            <InfoTooltip title="Total CO2" content="Total tons of CO2 offset by all staked $ORNE tokens.">
               <span className="tooltip-icon text-primary">
                 <svg fill="none" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg"><g clipPath="url(#clip0_1621_4337)"><path d="M9.99984 18.3327C5.39734 18.3327 1.6665 14.6018 1.6665 9.99935C1.6665 5.39685 5.39734 1.66602 9.99984 1.66602C14.6023 1.66602 18.3332 5.39685 18.3332 9.99935C18.3332 14.6018 14.6023 18.3327 9.99984 18.3327ZM9.1665 9.16602V14.166H10.8332V9.16602H9.1665ZM9.1665 5.83268V7.49935H10.8332V5.83268H9.1665Z" fill="currentColor"></path></g><defs><clipPath id="clip0_1621_4337"><rect width="20" height="20" fill="currentColor"></rect></clipPath></defs></svg>
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">{dashboardData?.totalCO2Offset || 0} kg</div>
+          <div className="stat-value">{(() => {
+            if (window.orneGlobalStatsV5?.totalCO2OffsetT !== undefined) {
+              return window.orneGlobalStatsV5.totalCO2OffsetT.toFixed(3) + ' t';
+            }
+            const totalStakedNumber = parseFloat(globalStats.totalStaked);
+            const co2PerOrneNumber = parseFloat(globalStats.co2PerOrne.replace(/,/g, '')) || 0;
+            if (totalStakedNumber === 0 || co2PerOrneNumber === 0) return '0 kg';
+            const totalCO2Grams = totalStakedNumber * co2PerOrneNumber;
+            return (totalCO2Grams / 1000).toFixed(3) + ' t';
+          })()}</div>
         </div>
         {/* Bloc Total $ORNE staked */}
         <div className="stat-card">
@@ -650,7 +659,7 @@ const Carbon = ({ userStats, globalStats, styles, dashboardData }) => {
               </span>
             </InfoTooltip>
           </div>
-          <div className="stat-value">{parseFloat(globalStats.totalStaked).toLocaleString()} $ORNE</div>
+          <div className="stat-value">{parseFloat(globalStats.totalStaked).toLocaleString()}</div>
         </div>
         {/* Bloc CO2 per $ORNE */}
         <div className="stat-card">

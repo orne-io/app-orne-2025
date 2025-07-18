@@ -23,6 +23,7 @@ import { arbitrum } from 'wagmi/chains';
 import '@rainbow-me/rainbowkit/styles.css';
 import './styles/styles.css';
 import { useMediaQuery } from 'react-responsive';
+import Holders from './components/Holders';
 
 // Configuration RainbowKit + wagmi (simplifiée)
 const config = getDefaultConfig({
@@ -288,6 +289,10 @@ function AppContent({
       return <TermsOfService />;
     }
     
+    if (activeTab === 'holders') {
+      return <Holders />;
+    }
+    
     return (
       <Staking
         wallet={wallet}
@@ -387,6 +392,16 @@ function AppContent({
                           >
                             Swap
                           </div>
+                          <div
+                            style={{
+                              ...styles.navItem,
+                              ...(activeTab === 'holders' ? styles.navItemActive : {})
+                            }}
+                            className="navItem"
+                            onClick={() => { setActiveTab('holders'); setShowMobileMenu(false); }}
+                          >
+                            Holders
+                          </div>
                           {showAdminPanel && (
                             <div
                               style={{
@@ -453,6 +468,16 @@ function AppContent({
                         onClick={() => { setActiveTab('swap'); setShowMobileMenu(false); }}
                       >
                         Swap
+                      </div>
+                      <div
+                        style={{
+                          ...styles.navItem,
+                          ...(activeTab === 'holders' ? styles.navItemActive : {})
+                        }}
+                        className="navItem"
+                        onClick={() => { setActiveTab('holders'); setShowMobileMenu(false); }}
+                      >
+                        Holders
                       </div>
                       {showAdminPanel && (
                         <div

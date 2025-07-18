@@ -113,8 +113,7 @@ export const sendTransaction = async (to, data, from, value = '0x0', provider = 
       }
       fromAddress = accounts[0];
     }
-    console.log('Sending transaction from:', fromAddress);
-    console.log('Transaction data:', { to, data, value });
+
     // Envoyer la transaction
     const hash = await window.ethereum.request({
       method: 'eth_sendTransaction',

@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { styles } from '../styles/styles';
-import { ORNE_WETH_V3_POOL } from '../utils/uniswapV3';
 import { useUniswapV3PoolData } from '../hooks/useUniswapV3PoolData';
-import { ethers } from 'ethers';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { useGlobalStats } from '../hooks/useGlobalStats';
 import InfoTooltip from './InfoTooltip';
@@ -14,18 +12,39 @@ import pooledWethIcon from '../images/pooled-weth.png';
 import { useAccount } from 'wagmi';
 import { useNotificationContext } from '../contexts/NotificationContext';
 import { useWethPrice } from '../hooks/useWethPrice';
+import tokenIcon from '../images/token_icon.png';
+import { ethers } from 'ethers';
+import { ORNE_WETH_V3_POOL } from '../utils/uniswapV3';
 
 const ORNE_TOKEN_ADDRESS = "0x89DbdB8e3b0e41aAe0871Bf9e1fcCe72F117bB1f";
 const ORNE_TOKEN_SYMBOL = "ORNE";
 const ORNE_TOKEN_DECIMALS = 18;
-const WETH_DECIMALS = 18;
-const CIRCULATING_SUPPLY = 90000000; // mock, replace with real value if available
 const WETH_ADDRESS = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"; // WETH on Arbitrum
 
 function addTokenToMetaMask() {
-  // Note: This function is now handled by RainbowKit/wagmi
-  // Users can add tokens through their wallet interface
-  console.log('Token addition is handled by the connected wallet');
+  if (window.ethereum && window.ethereum.request) {
+    window.ethereum.request({
+      method: 'wallet_watchAsset',
+      params: {
+        type: 'ERC20',
+        options: {
+          address: ORNE_TOKEN_ADDRESS,
+          symbol: ORNE_TOKEN_SYMBOL,
+          decimals: ORNE_TOKEN_DECIMALS,
+          image: window.location.origin + tokenIcon.replace(/^\./, ''),
+        },
+      },
+    }).then((success) => {
+      if (success) {
+        // Optionally show a notification
+        if (typeof window.showSuccess === 'function') {
+          window.showSuccess('$ORNE token added to wallet!');
+        }
+      }
+    }).catch(console.error);
+  } else {
+    alert('MetaMask is not available.');
+  }
 }
 
 const Swap = () => {
@@ -43,7 +62,6 @@ const Swap = () => {
   
   // Extract data from the new pool data format
   const price = poolData?.price || 0;
-  const priceUSD = poolData?.price ? parseFloat(poolData.price) * 3000 : 0; // Will be calculated properly in dashboardData
   const pooledOrne = poolData?.orneLiquidity || 0;
   const pooledWeth = poolData?.wethLiquidity || 0;
   const loading = poolData?.loading || false;

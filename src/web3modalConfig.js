@@ -25,7 +25,7 @@ export const ethersConfig = defaultConfig({
   projectId
 });
 
-console.log('Appel de createWeb3Modal (web3modalConfig.js)');
+
 createWeb3Modal({
   ethersConfig,
   chains: [arbitrumSepolia],

@@ -1324,7 +1324,7 @@ export default function ORNEStakingDApp() {
                 </div>
                 <div style={styles.co2Stat}>
                   <h4 style={{marginBottom: '10px'}}>CO2 par ORNE</h4>
-                  <p style={{fontSize: '1.8rem', fontWeight: 'bold'}}>{globalStats.co2PerOrne} g</p>
+                  <p style={{fontSize: '1.8rem', fontWeight: 'bold'}}>{Number(globalStats.co2PerOrne).toFixed(2)} g</p>
                 </div>
               </div>
             </div>

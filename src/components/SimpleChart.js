@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
 
 // Tooltip personnalisée factory
 const makeCustomTooltip = (yLabel) => ({ active, payload, label }) => {
@@ -53,19 +53,21 @@ const filterDataByPeriod = (data, period) => {
   // On suppose que chaque point a une propriété fullDate ou date utilisable
   return data.filter(d => {
     const dateStr = d.fullDate || d.date;
+    if (!dateStr) return true; // Si pas de date, garder le point
     const date = new Date(dateStr);
     return date >= fromDate;
   });
 };
 
-const LiveChart = ({ data, color, dataKey, yLabel, period, setPeriod, gradientId }) => {
-  // Filtrage des données selon la période
-  const filteredData = useMemo(() => filterDataByPeriod(data, period), [data, period]);
+const LiveChart = ({ data, color, dataKey, yLabel, gradientId, showReferenceLine = false, referenceValue = null }) => {
+  // Trie et slice les 10 derniers points
+  const sortedData = [...data].sort((a, b) => new Date(a.fullDate || a.date) - new Date(b.fullDate || b.date));
+  const last10 = sortedData.length > 10 ? sortedData.slice(-10) : sortedData;
 
   return (
     <div style={{ width: '100%' }}>
       <ResponsiveContainer width="100%" height={220}>
-        <AreaChart data={filteredData} margin={{ top: 30, right: 10, left: 0, bottom: 0 }}>
+        <AreaChart data={last10} margin={{ top: 30, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.25} />
@@ -73,7 +75,7 @@ const LiveChart = ({ data, color, dataKey, yLabel, period, setPeriod, gradientId
             </linearGradient>
           </defs>
           <XAxis 
-            dataKey="date" 
+            dataKey={d => d.fullDate || d.date} 
             tick={{ fontSize: 12, fill: '#666' }}
             axisLine={false}
             tickLine={false}
@@ -84,6 +86,15 @@ const LiveChart = ({ data, color, dataKey, yLabel, period, setPeriod, gradientId
             tickLine={false}
           />
           <Tooltip content={makeCustomTooltip(yLabel)} />
+          {showReferenceLine && referenceValue && (
+            <ReferenceLine 
+              y={referenceValue} 
+              stroke="#666" 
+              strokeDasharray="3 3" 
+              strokeWidth={1}
+              label={{ value: `${referenceValue.toLocaleString()}`, position: 'insideRight', fill: '#666', fontSize: 12 }}
+            />
+          )}
           <Area 
             type="monotone" 
             dataKey={dataKey} 

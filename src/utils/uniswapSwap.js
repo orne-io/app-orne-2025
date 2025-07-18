@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 import { parseEther, formatEther, Interface } from 'ethers';
 import { useWagmiClients, sendTransactionWithWagmi, waitForTransactionWithWagmi, getCurrentAllowanceWithWagmi } from './wagmiUtils';
-import { WETH_ADDRESS, ORNE_TOKEN_ADDRESS, UNISWAP_V3_ROUTER, UNISWAP_V3_QUOTER_V2 } from './constants';
+import { WETH_ADDRESS, ORNE_TOKEN_ADDRESS, UNISWAP_V3_ROUTER } from './constants';
 import { useNotificationContext } from '../contexts/NotificationContext';
 
 // ERC20 ABI for approve and allowance
@@ -175,14 +175,6 @@ export const getSwapQuote = async (tokenIn, tokenOut, amountIn, fee = 3000, slip
       const wethLiquidity = parseFloat(poolData.wethLiquidity);
       priceImpact = wethLiquidity > 0 ? (amountInNumber / wethLiquidity) * 100 : 0.1;
     }
-
-    console.log('Quote calculated:', {
-      amountIn: formatEther(amountIn),
-      amountOut: formatEther(amountOut),
-      amountOutMinimum: formatEther(amountOutMinimumBigInt),
-      priceImpact: `${priceImpact.toFixed(2)}%`,
-      amountOutNumber: amountOutNumber
-    });
 
     return {
       amountOut: amountOut.toString(),

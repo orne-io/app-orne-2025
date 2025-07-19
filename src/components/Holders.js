@@ -9,6 +9,24 @@ import { useGlobalStats } from '../hooks/useGlobalStats';
 
 const ARBISCAN_URL = 'https://arbiscan.io/address/';
 
+// Known addresses mapping
+const KNOWN_ADDRESSES = {
+  '0x38b27cb0339334e0ac2b73d0bf5b57b6fc3db8c5': 'Orne',
+  '0x100156f27a3686a4da7fee7148520a229320e7c8': 'Staking contract',
+  '0x198d0136c5e7766572f6918eda7ac2b576b43d2f': 'Uniswap ORNE-WETH pair'
+};
+
+// Helper function to format address display
+function formatAddress(address) {
+  const addressLower = address.toLowerCase();
+  const knownName = KNOWN_ADDRESSES[addressLower];
+  if (knownName) {
+    return knownName;
+  }
+  // For unknown addresses, show the full address
+  return address;
+}
+
 function StatBlock({ color, title, value, tooltip, icon }) {
   return (
     <div className="flex gap-0 mb-0 stat-card">
@@ -190,7 +208,7 @@ function Holders() {
               {sorted.map(h => (
                 <tr key={h.address}>
                   <td className="text-center" style={{ fontFamily: 'monospace', maxWidth: 220, overflowWrap: 'break-word' }}>
-                    <a href={ARBISCAN_URL + h.address} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{h.address}</a>
+                    <a href={ARBISCAN_URL + h.address} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'underline' }}>{formatAddress(h.address)}</a>
                   </td>
                   <td className="text-center">{Number(h.totalHolding).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
                   <td className="text-center">{Number(h.totalLiquid).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>

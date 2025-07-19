@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Staking from './components/Staking';
 import Carbon from './components/Carbon';
@@ -88,8 +89,208 @@ function CustomConnectButton(props) {
   );
 }
 
+function Navigation({ showAdminPanel, showMobileMenu, setShowMobileMenu, isMobile }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === path;
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setShowMobileMenu(false);
+  };
+
+  return (
+    <>
+      {isMobile ? (
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+          <div style={styles.logo} onClick={() => handleNavigation('/')} role="button" tabIndex={0} aria-label="Go to dashboard" onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') { handleNavigation('/'); } }}>
+            <img src={Logo} alt="ORNE Logo" style={{ height: 40, verticalAlign: 'middle', cursor: 'pointer' }} />
+          </div>
+          <div
+            className="burger"
+            style={{ ...styles.burger, display: 'flex' }}
+            onClick={() => setShowMobileMenu((v) => !v)}
+          >
+            <span style={{
+              ...styles.burgerBar,
+              transform: showMobileMenu ? 'rotate(45deg) translateY(15px)' : 'none',
+            }}></span>
+            <span style={{
+              ...styles.burgerBar,
+              opacity: showMobileMenu ? 0 : 1,
+            }}></span>
+            <span style={{
+              ...styles.burgerBar,
+              transform: showMobileMenu ? 'rotate(-45deg) translateY(-15px)' : 'none',
+            }}></span>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+          <div style={styles.logo} onClick={() => handleNavigation('/')} role="button" tabIndex={0} aria-label="Go to dashboard" onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') { handleNavigation('/'); } }}>
+            <img src={Logo} alt="ORNE Logo" style={{ height: 40, verticalAlign: 'middle', cursor: 'pointer' }} />
+          </div>
+          {/* Desktop navigation + bouton wallet */}
+          <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end', gap: 32 }}>
+            <div className="nav" style={styles.nav}>
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/') ? styles.navItemActive : {})
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/')}
+              >
+                Dashboard
+              </div>
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/stake') ? styles.navItemActive : {})
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/stake')}
+              >
+                Stake
+              </div>
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/carbon') ? styles.navItemActive : {})
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/carbon')}
+              >
+                Carbon
+              </div>
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/swap') ? styles.navItemActive : {})
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/swap')}
+              >
+                Swap
+              </div>
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/holders') ? styles.navItemActive : {})
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/holders')}
+              >
+                Holders
+              </div>
+              {showAdminPanel && (
+                <div
+                  style={{
+                    ...styles.navItem,
+                    ...(isActive('/admin') ? styles.navItemActive : {}),
+                    color: '#dc3545'
+                  }}
+                  className="navItem"
+                  onClick={() => handleNavigation('/admin')}
+                >
+                  🔧 Admin
+                </div>
+              )}
+            </div>
+            <div style={{ marginLeft: 32, minWidth: 180, display: 'flex', alignItems: 'center' }}>
+              <CustomConnectButton style={{ minWidth: 180 }} />
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Navigation mobile */}
+      {isMobile && (
+        <div>
+          <div
+            className={`nav${showMobileMenu ? ' mobile-open' : ''}`}
+            style={showMobileMenu ? styles.mobileNav : { display: 'none' }}
+          >
+            <div
+              style={{
+                ...styles.navItem,
+                ...(isActive('/') ? styles.navItemActive : {})
+              }}
+              className="navItem"
+              onClick={() => handleNavigation('/')}
+            >
+              Dashboard
+            </div>
+            <div
+              style={{
+                ...styles.navItem,
+                ...(isActive('/stake') ? styles.navItemActive : {})
+              }}
+              className="navItem"
+              onClick={() => handleNavigation('/stake')}
+            >
+              Stake
+            </div>
+            <div
+              style={{
+                ...styles.navItem,
+                ...(isActive('/carbon') ? styles.navItemActive : {})
+              }}
+              className="navItem"
+              onClick={() => handleNavigation('/carbon')}
+            >
+              Carbon
+            </div>
+            <div
+              style={{
+                ...styles.navItem,
+                ...(isActive('/swap') ? styles.navItemActive : {})
+              }}
+              className="navItem"
+              onClick={() => handleNavigation('/swap')}
+            >
+              Swap
+            </div>
+            <div
+              style={{
+                ...styles.navItem,
+                ...(isActive('/holders') ? styles.navItemActive : {})
+              }}
+              className="navItem"
+              onClick={() => handleNavigation('/holders')}
+            >
+              Holders
+            </div>
+            {showAdminPanel && (
+              <div
+                style={{
+                  ...styles.navItem,
+                  ...(isActive('/admin') ? styles.navItemActive : {}),
+                  color: '#dc3545'
+                }}
+                className="navItem"
+                onClick={() => handleNavigation('/admin')}
+              >
+                🔧 Admin
+              </div>
+            )}
+            {/* Bouton wallet RainbowKit dans le menu mobile */}
+            <div style={styles.mobileNavWallet}>
+              <CustomConnectButton style={{ minWidth: 180 }} />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function ORNEStakingDApp() {
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 768 });
@@ -124,34 +325,8 @@ function ORNEStakingDApp() {
   }, [wallet.connected, loadUserData]);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      checkAdminAccess();
-      
-      // Handle privacy and terms pages
-      const hash = window.location.hash;
-      if (hash === '#privacy') {
-        setActiveTab('privacy');
-      } else if (hash === '#terms') {
-        setActiveTab('terms');
-      }
-    };
-
     checkAdminAccess();
-    
-    // Check initial hash
-    const hash = window.location.hash;
-    if (hash === '#privacy') {
-      setActiveTab('privacy');
-    } else if (hash === '#terms') {
-      setActiveTab('terms');
-    }
-    
-    window.addEventListener('hashchange', handleHashChange);
-    
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [checkAdminAccess, setActiveTab]);
+  }, [checkAdminAccess]);
 
   useEffect(() => {
     loadGlobalStats();
@@ -163,32 +338,32 @@ function ORNEStakingDApp() {
     <WagmiConfig config={config}>
       <RainbowKitProvider>
         <NotificationProvider>
-          <AppContent 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            loading={loading}
-            setLoading={setLoading}
-            showMobileMenu={showMobileMenu}
-            setShowMobileMenu={setShowMobileMenu}
-            isMobile={isMobile}
-            status={status}
-            showStatus={showStatus}
-            globalStats={globalStats}
-            globalUnstakingStats={globalUnstakingStats}
-            loadGlobalStats={loadGlobalStats}
-            wallet={wallet}
-            userStats={userStats}
-            loadUserData={loadUserData}
-            uniswapData={uniswapData}
-            dashboardData={dashboardData}
-            showAdminPanel={showAdminPanel}
-            adminData={adminData}
-            setAdminData={setAdminData}
-            addCO2={addCO2}
-            distributeRewards={distributeRewards}
-            setUnstakingDelay={setUnstakingDelay}
-            styles={styles}
-          />
+          <Router>
+            <AppContent 
+              loading={loading}
+              setLoading={setLoading}
+              showMobileMenu={showMobileMenu}
+              setShowMobileMenu={setShowMobileMenu}
+              isMobile={isMobile}
+              status={status}
+              showStatus={showStatus}
+              globalStats={globalStats}
+              globalUnstakingStats={globalUnstakingStats}
+              loadGlobalStats={loadGlobalStats}
+              wallet={wallet}
+              userStats={userStats}
+              loadUserData={loadUserData}
+              uniswapData={uniswapData}
+              dashboardData={dashboardData}
+              showAdminPanel={showAdminPanel}
+              adminData={adminData}
+              setAdminData={setAdminData}
+              addCO2={addCO2}
+              distributeRewards={distributeRewards}
+              setUnstakingDelay={setUnstakingDelay}
+              styles={styles}
+            />
+          </Router>
         </NotificationProvider>
       </RainbowKitProvider>
     </WagmiConfig>
@@ -196,8 +371,6 @@ function ORNEStakingDApp() {
 }
 
 function AppContent({
-  activeTab,
-  setActiveTab,
   loading,
   setLoading,
   showMobileMenu,
@@ -235,81 +408,6 @@ function AppContent({
     return () => document.removeEventListener('mousedown', handleClick);
   }, [showMobileMenu, setShowMobileMenu]);
 
-  // Rendu du contenu principal (inchangé)
-  const renderMainContent = () => {
-    if (showAdminPanel && activeTab === 'admin') {
-      return (
-        <AdminPanel
-          adminData={adminData}
-          setAdminData={setAdminData}
-          globalStats={globalStats}
-          dashboardData={dashboardData}
-          addCO2={addCO2}
-          distributeRewards={distributeRewards}
-          setUnstakingDelay={setUnstakingDelay}
-          loading={loading}
-          status={status}
-          styles={styles}
-        />
-      );
-    }
-    
-    if (activeTab === 'dashboard') {
-      return (
-        <Dashboard
-          dashboardData={dashboardData}
-          globalStats={globalStats}
-          globalUnstakingStats={globalUnstakingStats}
-          styles={styles}
-          wallet={wallet}
-        />
-      );
-    }
-    
-    if (activeTab === 'carbon') {
-      return (
-        <Carbon
-          userStats={userStats}
-          globalStats={globalStats}
-          styles={styles}
-          dashboardData={dashboardData}
-        />
-      );
-    }
-    
-    if (activeTab === 'swap') {
-      return <Swap />;
-    }
-    
-    if (activeTab === 'privacy') {
-      return <PrivacyPolicy />;
-    }
-    
-    if (activeTab === 'terms') {
-      return <TermsOfService />;
-    }
-    
-    if (activeTab === 'holders') {
-      return <Holders />;
-    }
-    
-    return (
-      <Staking
-        wallet={wallet}
-        userStats={userStats}
-        globalStats={globalStats}
-        loadUserData={loadUserData}
-        loadGlobalStats={loadGlobalStats}
-        connectWallet={null}
-        loading={loading}
-        setLoading={setLoading}
-        status={status}
-        showStatus={showStatus}
-        styles={styles}
-      />
-    );
-  };
-
   return (
     <>
       <NotificationContainer 
@@ -317,200 +415,82 @@ function AppContent({
         removeNotification={removeNotification} 
       />
       <div style={{ ...styles.container, minHeight: '100vh', display: 'flex', flexDirection: 'column', width: '100%', maxWidth: '100%' }}>
-            {/* Header */}
-            <div style={styles.header}>
-              <div className="headerContent" style={styles.headerContent}>
-                  {isMobile ? (
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                      <div style={styles.logo} onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }} role="button" tabIndex={0} aria-label="Go to dashboard" onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') { setActiveTab('dashboard'); setShowMobileMenu(false); } }}>
-                        <img src={Logo} alt="ORNE Logo" style={{ height: 40, verticalAlign: 'middle', cursor: 'pointer' }} />
-                      </div>
-                      <div
-                        className="burger"
-                        style={{ ...styles.burger, display: 'flex' }}
-                        onClick={() => setShowMobileMenu((v) => !v)}
-                      >
-                        <span style={{
-                          ...styles.burgerBar,
-                          transform: showMobileMenu ? 'rotate(45deg) translateY(15px)' : 'none',
-                        }}></span>
-                        <span style={{
-                          ...styles.burgerBar,
-                          opacity: showMobileMenu ? 0 : 1,
-                        }}></span>
-                        <span style={{
-                          ...styles.burgerBar,
-                          transform: showMobileMenu ? 'rotate(-45deg) translateY(-15px)' : 'none',
-                        }}></span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <div style={styles.logo} onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }} role="button" tabIndex={0} aria-label="Go to dashboard" onKeyPress={e => { if (e.key === 'Enter' || e.key === ' ') { setActiveTab('dashboard'); setShowMobileMenu(false); } }}>
-                        <img src={Logo} alt="ORNE Logo" style={{ height: 40, verticalAlign: 'middle', cursor: 'pointer' }} />
-                      </div>
-                      {/* Desktop navigation + bouton wallet */}
-                      <div style={{ display: 'flex', alignItems: 'center', flex: 1, justifyContent: 'flex-end', gap: 32 }}>
-                        <div className="nav" style={styles.nav}>
-                          <div
-                            style={{
-                              ...styles.navItem,
-                              ...(activeTab === 'dashboard' ? styles.navItemActive : {})
-                            }}
-                            className="navItem"
-                            onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }}
-                          >
-                            Dashboard
-                          </div>
-                          <div
-                            style={{
-                              ...styles.navItem,
-                              ...(activeTab === 'stake' ? styles.navItemActive : {})
-                            }}
-                            className="navItem"
-                            onClick={() => { setActiveTab('stake'); setShowMobileMenu(false); }}
-                          >
-                            Stake
-                          </div>
-                          <div
-                            style={{
-                              ...styles.navItem,
-                              ...(activeTab === 'carbon' ? styles.navItemActive : {})
-                            }}
-                            className="navItem"
-                            onClick={() => { setActiveTab('carbon'); setShowMobileMenu(false); }}
-                          >
-                            Carbon
-                          </div>
-                          <div
-                            style={{
-                              ...styles.navItem,
-                              ...(activeTab === 'swap' ? styles.navItemActive : {})
-                            }}
-                            className="navItem"
-                            onClick={() => { setActiveTab('swap'); setShowMobileMenu(false); }}
-                          >
-                            Swap
-                          </div>
-                          <div
-                            style={{
-                              ...styles.navItem,
-                              ...(activeTab === 'holders' ? styles.navItemActive : {})
-                            }}
-                            className="navItem"
-                            onClick={() => { setActiveTab('holders'); setShowMobileMenu(false); }}
-                          >
-                            Holders
-                          </div>
-                          {showAdminPanel && (
-                            <div
-                              style={{
-                                ...styles.navItem,
-                                ...(activeTab === 'admin' ? styles.navItemActive : {}),
-                                color: '#dc3545'
-                              }}
-                              className="navItem"
-                              onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
-                            >
-                              🔧 Admin
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ marginLeft: 32, minWidth: 180, display: 'flex', alignItems: 'center' }}>
-                          <CustomConnectButton style={{ minWidth: 180 }} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                {/* Navigation mobile */}
-                {isMobile && (
-                  <div>
-                    <div
-                      className={`nav${showMobileMenu ? ' mobile-open' : ''}`}
-                      style={showMobileMenu ? styles.mobileNav : { display: 'none' }}
-                    >
-                      <div
-                        style={{
-                          ...styles.navItem,
-                          ...(activeTab === 'dashboard' ? styles.navItemActive : {})
-                        }}
-                        className="navItem"
-                        onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }}
-                      >
-                        Dashboard
-                      </div>
-                      <div
-                        style={{
-                          ...styles.navItem,
-                          ...(activeTab === 'stake' ? styles.navItemActive : {})
-                        }}
-                        className="navItem"
-                        onClick={() => { setActiveTab('stake'); setShowMobileMenu(false); }}
-                      >
-                        Stake
-                      </div>
-                      <div
-                        style={{
-                          ...styles.navItem,
-                          ...(activeTab === 'carbon' ? styles.navItemActive : {})
-                        }}
-                        className="navItem"
-                        onClick={() => { setActiveTab('carbon'); setShowMobileMenu(false); }}
-                      >
-                        Carbon
-                      </div>
-                      <div
-                        style={{
-                          ...styles.navItem,
-                          ...(activeTab === 'swap' ? styles.navItemActive : {})
-                        }}
-                        className="navItem"
-                        onClick={() => { setActiveTab('swap'); setShowMobileMenu(false); }}
-                      >
-                        Swap
-                      </div>
-                      <div
-                        style={{
-                          ...styles.navItem,
-                          ...(activeTab === 'holders' ? styles.navItemActive : {})
-                        }}
-                        className="navItem"
-                        onClick={() => { setActiveTab('holders'); setShowMobileMenu(false); }}
-                      >
-                        Holders
-                      </div>
-                      {showAdminPanel && (
-                        <div
-                          style={{
-                            ...styles.navItem,
-                            ...(activeTab === 'admin' ? styles.navItemActive : {}),
-                            color: '#dc3545'
-                          }}
-                          className="navItem"
-                          onClick={() => { setActiveTab('admin'); setShowMobileMenu(false); }}
-                        >
-                          🔧 Admin
-                        </div>
-                      )}
-                      {/* Bouton wallet RainbowKit dans le menu mobile */}
-                      <div style={styles.mobileNavWallet}>
-                        <CustomConnectButton style={{ minWidth: 180 }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            {/* Main Content */}
-            <div style={{ ...styles.main, flex: 1, marginBottom: 0 }}>
-              {renderMainContent()}
-            </div>
-            
-            {/* Footer */}
-            <Footer />
+        {/* Header */}
+        <div style={styles.header}>
+          <div className="headerContent" style={styles.headerContent}>
+            <Navigation 
+              showAdminPanel={showAdminPanel}
+              showMobileMenu={showMobileMenu}
+              setShowMobileMenu={setShowMobileMenu}
+              isMobile={isMobile}
+            />
           </div>
-        </>
-      );
-    }
+        </div>
+        {/* Main Content */}
+        <div style={{ ...styles.main, flex: 1, marginBottom: 0 }}>
+          <Routes>
+            <Route path="/" element={
+              <Dashboard
+                dashboardData={dashboardData}
+                globalStats={globalStats}
+                globalUnstakingStats={globalUnstakingStats}
+                styles={styles}
+                wallet={wallet}
+              />
+            } />
+            <Route path="/stake" element={
+              <Staking
+                wallet={wallet}
+                userStats={userStats}
+                globalStats={globalStats}
+                loadUserData={loadUserData}
+                loadGlobalStats={loadGlobalStats}
+                connectWallet={null}
+                loading={loading}
+                setLoading={setLoading}
+                status={status}
+                showStatus={showStatus}
+                styles={styles}
+              />
+            } />
+            <Route path="/carbon" element={
+              <Carbon
+                userStats={userStats}
+                globalStats={globalStats}
+                styles={styles}
+                dashboardData={dashboardData}
+              />
+            } />
+            <Route path="/swap" element={<Swap />} />
+            <Route path="/holders" element={<Holders />} />
+            <Route path="/admin" element={
+              showAdminPanel ? (
+                <AdminPanel
+                  adminData={adminData}
+                  setAdminData={setAdminData}
+                  globalStats={globalStats}
+                  dashboardData={dashboardData}
+                  addCO2={addCO2}
+                  distributeRewards={distributeRewards}
+                  setUnstakingDelay={setUnstakingDelay}
+                  loading={loading}
+                  status={status}
+                  styles={styles}
+                />
+              ) : (
+                <div className="text-center mt-20" style={{ color: '#383e5c' }}>Access denied</div>
+              )
+            } />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+          </Routes>
+        </div>
+        
+        {/* Footer */}
+        <Footer />
+      </div>
+    </>
+  );
+}
 
 export default ORNEStakingDApp;

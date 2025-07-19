@@ -62,9 +62,10 @@ export const useAdmin = (loadGlobalStats, loadUserData, showStatus, setLoading, 
 
   // Vérifier l'accès admin via URL et propriétaire du contrat
   const checkAdminAccess = useCallback(async () => {
-    const urlHash = window.location.hash;
-    const hasAdminHash = urlHash === '#admin';
-    if (hasAdminHash && isConnected && address) {
+    const currentPath = window.location.pathname;
+    const hasAdminPath = currentPath === '/admin';
+    
+    if (hasAdminPath && isConnected && address) {
       try {
         const ownerHex = await callContract(CONFIG.STAKING_VAULT_ADDRESS, 'owner()', []);
         
